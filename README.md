@@ -1,6 +1,8 @@
+# ***This README is not finished yet!***
+
 # ServerGods
 A not so simple custom discord bot made in Java, designed for my Discord server, but it could be used in other servers with the release of 2.1.0.
-It is currently not out yet, but should be soon.
+It is currently not finished yet, but should be soon.
 
 ## Setup
 
