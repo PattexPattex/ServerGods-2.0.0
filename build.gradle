@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+}
+
+group 'com.pattexpattex'
+version '2.1.0'
+
+repositories {
+    mavenCentral()
+    maven { url "https://m2.dv8tion.net/releases" }
+    maven { url "https://jitpack.io" }
+    maven { url "https://m2.chew.pro/snapshots" }
+    jcenter()
+    flatDir {
+        dirs "localdependencies"
+    }
+}
+
+dependencies {
+    /* JDA */
+    implementation "net.dv8tion:JDA:5.0.0-alpha.4" //JDA
+    implementation 'ch.qos.logback:logback-classic:1.2.10' //Logback (dependency of SLF4J)
+
+    /* Everything sound related */
+    //implementation "com.sedmelluq:jda-nas:1.1.0" //JDA-NAS
+    implementation "com.sedmelluq:lavaplayer:1.3.77" //LavaPlayer
+    implementation 'se.michaelthelin.spotify:spotify-web-api-java:7.0.0' //Spotify web API wrapper
+    implementation "com.jagrosh:JLyrics:0.5" //JLyrics
+    implementation "com.typesafe:config:1.4.2" //Typesafe config (dependency of JLyrics)
+
+    /* Other */
+    implementation 'org.json:json:20211205' //org.json for config
+    implementation "pw.chew:jda-chewtils:2.0-SNAPSHOT" //JDA-Utilities fork
+}
+
+test {
+    useJUnitPlatform()
+}

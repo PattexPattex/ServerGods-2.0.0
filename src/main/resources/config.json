@@ -1,0 +1,33 @@
+{
+  "token": null,
+  "activity_type": "PLAYING",
+  "activity_text": "/about",
+  "status": "online",
+  "color": "FFFFFF",
+  "bot_owner": "",
+  "alone_time_until_stop": -1,
+  "prefix": "$$$",
+  "lyrics_provider": "A-Z Lyrics",
+  "debug_info_in_messages": false,
+  "spotify_app_id": null,
+  "spotify_app_secret": null,
+
+  "commands": {
+    "set": true,
+    "enable": true,
+    "about": true,
+
+    "ban": true,
+    "kick": true,
+    "mute": true,
+    "move": true,
+
+    "roles": true,
+    "ping": true,
+    "invite": true,
+    "giveaway": true,
+    "poll": true,
+    "rickroll": true,
+    "music": true
+  }
+}
