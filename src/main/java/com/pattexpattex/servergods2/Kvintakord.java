@@ -187,7 +187,7 @@ public class Kvintakord {
             player.addListener(scheduler);
         }
 
-        public Kvintakord.AudioPlayerSendHandler getSendHandler() {
+        public AudioPlayerSendHandler getSendHandler() {
             return new AudioPlayerSendHandler(player);
         }
     }
@@ -792,7 +792,7 @@ public class Kvintakord {
 
         @Override public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event) {
             if (event.getMember() == event.getGuild().getSelfMember()) {
-                Kvintakord.stop(event.getGuild());
+                stop(event.getGuild());
             }
         }
 
@@ -936,7 +936,7 @@ public class Kvintakord {
 
                 AudioEventDispatcher.onDisconnectFromAudioChannelBecauseEmpty(guild, currentVoiceChannel(guild));
 
-                Kvintakord.stop(guild);
+                stop(guild);
 
                 toRemove.add(entrySet.getKey());
             }
