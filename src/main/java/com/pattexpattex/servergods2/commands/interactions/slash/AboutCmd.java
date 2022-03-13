@@ -49,7 +49,7 @@ public class AboutCmd implements BotSlash {
         commandNames.forEach((name, description) -> builder.addField(name, description, false));
 
         event.getHook().editOriginalEmbeds(builder.build()).complete().editMessageComponents(ActionRow.of(
-                Button.link("https://github.com/PattexPattex/ServerGods", "Github").withEmoji(Emoji.fromEmote("github", 934755405802930176L, false)),
+                Button.link("https://github.com/PattexPattex/ServerGods-2.0.0", "Github").withEmoji(Emoji.fromEmote("github", 934755405802930176L, false)),
                 OtherUtil.getInviteButton())).queue();
     }
 

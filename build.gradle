@@ -1,4 +1,5 @@
 plugins {
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
     id 'java'
 }
 
@@ -19,7 +20,7 @@ repositories {
 dependencies {
     /* JDA */
     implementation "net.dv8tion:JDA:5.0.0-alpha.4" //JDA
-    implementation 'ch.qos.logback:logback-classic:1.2.10' //Logback (dependency of SLF4J)
+    implementation 'ch.qos.logback:logback-classic:1.2.11' //Logback (dependency of SLF4J)
 
     /* Everything sound related */
     //implementation "com.sedmelluq:jda-nas:1.1.0" //JDA-NAS
@@ -31,8 +32,12 @@ dependencies {
     /* Other */
     implementation 'org.json:json:20211205' //org.json for config
     implementation "pw.chew:jda-chewtils:2.0-SNAPSHOT" //JDA-Utilities fork
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2' //JUnit
 }
 
-test {
-    useJUnitPlatform()
+jar {
+    manifest {
+        attributes("Main-Class": "com.pattexpattex.servergods2.Bot")
+    }
 }

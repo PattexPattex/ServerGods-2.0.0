@@ -16,6 +16,13 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+/**
+ * Here are registered commands that are hidden to the end-user
+ * or designed to be executed only by the bots' owner.
+ * These commands include, but are not limited to {@link StopCmd} and {@link ClearCmd}.
+ * @since 1.0.0, but modified
+ * @see BotHidden
+ * */
 public class HiddenEventListener extends ListenerAdapter {
 
     private static final Map<String, BotHidden> cmdList = new HashMap<>();
@@ -23,13 +30,8 @@ public class HiddenEventListener extends ListenerAdapter {
     private final String prefix;
 
     /**
-     * Here are registered commands that are hidden to the end-user
-     * or designed to be executed only by the bot's owner.
-     * These commands include, but are not limited to {@link StopCmd}, {@link ClearCmd}, etc.
-     * @param prefix the prefix for the commands
-     * @since 1.0.0, but modified
-     * @see BotHidden
-     * */
+     * @param prefix The prefix used for the hidden commands ($$$, !, s!, etc.)
+     */
     public HiddenEventListener(String prefix) {
 
         // Sets the prefix
