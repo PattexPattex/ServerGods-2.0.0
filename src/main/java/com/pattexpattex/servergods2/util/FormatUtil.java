@@ -253,6 +253,20 @@ public class FormatUtil {
     }
 
     /**
+     * Formatted to a Discord epoch timestamp ({@code < t:1647291600>}), that is formatted like so: {@code Monday, March 14, 2022 at 10:00 PM}.
+     */
+    public static @NotNull String epochTimestamp(long epoch) {
+        return "<t:" + epoch + ">";
+    }
+
+    /**
+     * Formatted to a Discord epoch timestamp ({@code < t:1647291600:R>}), that is relative to the time ({@code in 5 hours}).
+     */
+    public static @NotNull String epochTimestampRelative(long epoch) {
+        return "<t:" + epoch + ":R>";
+    }
+
+    /**
      * @param time Formatted input: {@code HH:MM:SS / MM:SS / H:MM:SS / M:SS}
      * @throws NumberFormatException if the input is formatted illegally
      */
@@ -414,11 +428,11 @@ public class FormatUtil {
     private static String FORMAT_REWARD(String reward) {
         return BotEmoji.GIFT + " " + (reward.toLowerCase().contains("nitro") ? BotEmoji.NITRO : "") + " " + reward;
     }
-    private static String FORMAT_TIME(int seconds) {
-        return BotEmoji.LOADING + " Time left: `" + FormatUtil.formatTimeAlternate(seconds) + "`";
+    private static String FORMAT_TIME(OffsetDateTime time) {
+        return BotEmoji.LOADING + " Ends " + FormatUtil.epochTimestampRelative(time.toEpochSecond()) + "";
     }
 
-    public static EmbedBuilder runningGiveawayEmbed(int winners, int time, String reward) {
+    public static EmbedBuilder runningGiveawayEmbed(int winners, OffsetDateTime time, String reward) {
         return defaultEmbed(
                 REACT + "\n" +
                         FORMAT_WINNERS_NUM(winners) +

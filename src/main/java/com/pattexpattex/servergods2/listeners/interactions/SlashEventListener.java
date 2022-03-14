@@ -55,6 +55,8 @@ public class SlashEventListener extends ListenerAdapter {
         cmdList.add(new RickrollCmd());
         cmdList.add(new MusicCmd());
         cmdList.add(new EmoteCmd());
+        cmdList.add(new UserCmd());
+        cmdList.add(new AvatarCmd());
 
         //Enables the commands given in the config.json
         cmdList.forEach((cmd) -> {

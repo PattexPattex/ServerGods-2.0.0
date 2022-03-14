@@ -28,6 +28,9 @@
     "giveaway": true,
     "poll": true,
     "rickroll": true,
-    "music": true
+    "music": true,
+    "emote": true,
+    "user": true,
+    "avatar": true
   }
 }

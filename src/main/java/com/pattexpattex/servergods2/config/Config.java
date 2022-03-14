@@ -191,6 +191,8 @@ public class Config {
         POLL,
         RICKROLL,
         MUSIC,
-        EMOTE
+        EMOTE,
+        USER,
+        AVATAR
     }
 }

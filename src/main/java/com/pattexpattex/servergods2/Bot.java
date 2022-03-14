@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +80,7 @@ public class Bot {
         try {
             JDABuilder builder = JDABuilder.createDefault(config.getConfigValue(Config.ConfigValues.TOKEN))
                     .enableCache(CacheFlag.VOICE_STATE)
+                    .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(EnumSet.allOf(GatewayIntent.class))
                     .setActivity(config.getActivity())
                     .setStatus(config.getStatus())

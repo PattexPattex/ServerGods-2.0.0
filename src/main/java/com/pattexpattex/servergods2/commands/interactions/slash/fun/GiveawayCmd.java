@@ -14,6 +14,9 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 public class GiveawayCmd implements BotSlash {
@@ -120,6 +123,7 @@ public class GiveawayCmd implements BotSlash {
         protected String reward;
         protected int winners;
         protected int time;
+        private final OffsetDateTime offsetTime;
         protected Member host;
         protected boolean completed;
 
@@ -132,6 +136,7 @@ public class GiveawayCmd implements BotSlash {
             this.reward = reward;
             this.winners = winners;
             this.time = time;
+            this.offsetTime = OffsetDateTime.ofInstant(Instant.now().plusSeconds(time), ZoneId.systemDefault());
             this.host = host;
 
             this.completed = false;
@@ -155,7 +160,7 @@ public class GiveawayCmd implements BotSlash {
 
             while (time > 0) {
                 if (time > 5) {
-                    message.editMessageEmbeds(FormatUtil.runningGiveawayEmbed(winners, time, reward).build())
+                    message.editMessageEmbeds(FormatUtil.runningGiveawayEmbed(winners, offsetTime, reward).build())
                             .queue((msg) -> {
                                 time -= 5;
                                 message = msg;
@@ -173,7 +178,7 @@ public class GiveawayCmd implements BotSlash {
                     }
                 }
                 else {
-                    message.editMessageEmbeds(FormatUtil.runningGiveawayEmbed(winners, time, reward).build())
+                    message.editMessageEmbeds(FormatUtil.runningGiveawayEmbed(winners, offsetTime, reward).build())
                             .queue((msg) -> {
                                 time--;
                                 message = msg;
