@@ -208,8 +208,8 @@ public class Kvintakord {
             this.queue = new LinkedBlockingQueue<>();
             this.trackFails = 0;
 
-            this.loop = Bot.getGuildConfig(guild).getLoop();
-            this.queueLoop = Bot.getGuildConfig(guild).getQueueLoop();
+            this.loop = Bot.getGuildConfig(guild).getSingleLoop();
+            this.queueLoop = Bot.getGuildConfig(guild).getLoop();
         }
 
         //Methods
@@ -703,7 +703,7 @@ public class Kvintakord {
     }
 
     //Loop
-    public static void loopTrack(Guild guild, LoopMode mode) {
+    public static void setLoop(Guild guild, LoopMode mode) {
         TrackScheduler scheduler = getGuildAudioPlayer(guild).scheduler;
         GuildConfig config = Bot.getGuildConfig(guild);
 
@@ -722,9 +722,8 @@ public class Kvintakord {
             }
         }
 
-        config.setLoop(scheduler.loop);
-        config.setQueueLoop(scheduler.queueLoop);
-
+        config.setSingleLoop(scheduler.loop);
+        config.setLoop(scheduler.queueLoop);
     }
 
     public enum LoopMode {
@@ -736,9 +735,9 @@ public class Kvintakord {
     /**
      * @implNote Queue loop is superior to single track loop
      */
-    public static LoopMode isLooping(Guild guild) {
-        boolean loop = Bot.getGuildConfig(guild).getLoop();
-        boolean queueLoop = Bot.getGuildConfig(guild).getQueueLoop();
+    public static LoopMode getLoop(Guild guild) {
+        boolean loop = Bot.getGuildConfig(guild).getSingleLoop();
+        boolean queueLoop = Bot.getGuildConfig(guild).getLoop();
 
         if (queueLoop) {
             return LoopMode.ALL;

@@ -18,13 +18,13 @@ public class GuildConfig {
     protected String mutedId, giveawayId, pollId, welcomeId;
     protected String invite;
     protected Integer volume;
-    protected boolean loop, queueLoop;
+    protected boolean singleLoop, loop;
 
     public GuildConfig(GuildConfigManager manager,
                        JSONArray funRoles, JSONArray commands,
                        String mutedId, String giveawayId, String pollId, String welcomeId, String invite,
                        Integer volume,
-                       boolean loop, boolean queueLoop)
+                       boolean singleLoop, boolean loop)
     {
         this.manager = manager;
         this.funRoles = funRoles;
@@ -36,8 +36,8 @@ public class GuildConfig {
         this.pollId = pollId;
         this.welcomeId = welcomeId;
         this.volume = volume;
+        this.singleLoop = singleLoop;
         this.loop = loop;
-        this.queueLoop = queueLoop;
     }
 
 
@@ -95,12 +95,12 @@ public class GuildConfig {
         return volume != null ? volume : 100;
     }
 
-    public boolean getLoop() {
-        return loop;
+    public boolean getSingleLoop() {
+        return singleLoop;
     }
 
-    public boolean getQueueLoop() {
-        return queueLoop;
+    public boolean getLoop() {
+        return loop;
     }
 
     //Set() methods
@@ -186,14 +186,14 @@ public class GuildConfig {
         this.manager.writeGuildConfig();
     }
 
-    public void setLoop(boolean loop) {
-        this.loop = loop;
+    public void setSingleLoop(boolean loop) {
+        this.singleLoop = loop;
 
         this.manager.writeGuildConfig();
     }
 
-    public void setQueueLoop(boolean queueLoop) {
-        this.queueLoop = queueLoop;
+    public void setLoop(boolean queueLoop) {
+        this.loop = queueLoop;
 
         this.manager.writeGuildConfig();
     }

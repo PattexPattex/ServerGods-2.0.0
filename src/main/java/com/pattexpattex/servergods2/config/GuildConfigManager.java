@@ -40,8 +40,8 @@ public class GuildConfigManager {
                             obj.has("welcome_id")   ? obj.getString("welcome_id")   : null,
                             obj.has("invite")       ? obj.getString("invite")       : null,
                             obj.has("volume")       ? obj.getInt("volume")          : null,
-                            obj.has("loop")        && obj.getBoolean("loop"),
-                            obj.has("queue_loop")  && obj.getBoolean("queue_loop")
+                            obj.has("single_loop")        && obj.getBoolean("single_loop"),
+                            obj.has("loop")  && obj.getBoolean("loop")
                     ));
                 }
             });
@@ -79,8 +79,8 @@ public class GuildConfigManager {
                 if (guildConfig.welcomeId != null)  obj1.put("welcome_id", guildConfig.welcomeId);
                 if (guildConfig.invite != null)     obj1.put("invite", guildConfig.invite);
                 if (guildConfig.volume != null)     obj1.put("volume", guildConfig.volume);
+                if (guildConfig.singleLoop)         obj1.put("single_loop", true);
                 if (guildConfig.loop)               obj1.put("loop", true);
-                if (guildConfig.queueLoop)          obj1.put("queue_loop", true);
             }
 
             obj.put(Long.toString(key), obj1);

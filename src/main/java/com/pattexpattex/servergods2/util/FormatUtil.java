@@ -393,10 +393,10 @@ public class FormatUtil {
             sb.append(" **| \u23F8**");
         }
 
-        if (Bot.getGuildConfig(guild).getLoop()) {
+        if (Bot.getGuildConfig(guild).getSingleLoop()) {
             sb.append(" **| \uD83D\uDD02**");
         }
-        else if (Bot.getGuildConfig(guild).getQueueLoop()) {
+        else if (Bot.getGuildConfig(guild).getLoop()) {
             sb.append(" **| \uD83D\uDD01**");
         }
 

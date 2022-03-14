@@ -29,7 +29,7 @@ public class SkipButton implements BotButton {
             return;
         }
 
-        if (Kvintakord.getQueue(guild).isEmpty() && Kvintakord.isLooping(guild) == Kvintakord.LoopMode.OFF) {
+        if (Kvintakord.getQueue(guild).isEmpty() && Kvintakord.getLoop(guild) == Kvintakord.LoopMode.OFF) {
             Kvintakord.stop(guild);
         }
         else {

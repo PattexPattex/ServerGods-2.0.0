@@ -29,12 +29,12 @@ public class LoopButton implements BotButton {
             return;
         }
 
-        Kvintakord.LoopMode loopMode = Kvintakord.isLooping(guild);
+        Kvintakord.LoopMode loopMode = Kvintakord.getLoop(guild);
 
         switch (loopMode) {
-            case ALL -> Kvintakord.loopTrack(guild, Kvintakord.LoopMode.SINGLE);
-            case SINGLE -> Kvintakord.loopTrack(guild, Kvintakord.LoopMode.OFF);
-            case OFF -> Kvintakord.loopTrack(guild, Kvintakord.LoopMode.ALL);
+            case ALL -> Kvintakord.setLoop(guild, Kvintakord.LoopMode.SINGLE);
+            case SINGLE -> Kvintakord.setLoop(guild, Kvintakord.LoopMode.OFF);
+            case OFF -> Kvintakord.setLoop(guild, Kvintakord.LoopMode.ALL);
         }
 
         Kvintakord.updateLastQueueMessage(guild);
