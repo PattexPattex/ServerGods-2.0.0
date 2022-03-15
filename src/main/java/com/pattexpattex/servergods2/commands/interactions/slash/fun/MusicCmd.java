@@ -151,7 +151,7 @@ public class MusicCmd implements BotSlash {
                 String msg = " Disabled loop";
 
                 if (subcommand.endsWith("get")) {
-                    event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Current loop mode: " + Kvintakord.getLoop(guild).name()).build()).queue();
+                    event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Current loop mode: `" + Kvintakord.getLoop(guild).name() + "`").build()).queue();
                     return;
                 }
                 else if (subcommand.endsWith("all")) {

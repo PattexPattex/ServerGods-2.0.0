@@ -1,5 +1,6 @@
 package com.pattexpattex.servergods2.config;
 
+import com.pattexpattex.servergods2.Kvintakord;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -16,15 +17,13 @@ public class GuildConfig {
     protected JSONArray funRoles;
     protected JSONArray commands;
     protected String mutedId, giveawayId, pollId, welcomeId;
-    protected String invite;
+    protected String invite, loop;
     protected Integer volume;
-    protected boolean singleLoop, loop;
 
     public GuildConfig(GuildConfigManager manager,
                        JSONArray funRoles, JSONArray commands,
-                       String mutedId, String giveawayId, String pollId, String welcomeId, String invite,
-                       Integer volume,
-                       boolean singleLoop, boolean loop)
+                       String mutedId, String giveawayId, String pollId, String welcomeId, String invite, String loop,
+                       Integer volume)
     {
         this.manager = manager;
         this.funRoles = funRoles;
@@ -36,7 +35,6 @@ public class GuildConfig {
         this.pollId = pollId;
         this.welcomeId = welcomeId;
         this.volume = volume;
-        this.singleLoop = singleLoop;
         this.loop = loop;
     }
 
@@ -95,12 +93,8 @@ public class GuildConfig {
         return volume != null ? volume : 100;
     }
 
-    public boolean getSingleLoop() {
-        return singleLoop;
-    }
-
-    public boolean getLoop() {
-        return loop;
+    public Kvintakord.LoopMode getLoop() {
+        return Kvintakord.LoopMode.valueOf(loop.toUpperCase());
     }
 
     //Set() methods
@@ -186,14 +180,8 @@ public class GuildConfig {
         this.manager.writeGuildConfig();
     }
 
-    public void setSingleLoop(boolean loop) {
-        this.singleLoop = loop;
-
-        this.manager.writeGuildConfig();
-    }
-
-    public void setLoop(boolean queueLoop) {
-        this.loop = queueLoop;
+    public void setLoop(Kvintakord.LoopMode mode) {
+        this.loop = mode.name().toLowerCase();
 
         this.manager.writeGuildConfig();
     }

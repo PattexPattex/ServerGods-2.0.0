@@ -393,10 +393,10 @@ public class FormatUtil {
             sb.append(" **| \u23F8**");
         }
 
-        if (Bot.getGuildConfig(guild).getSingleLoop()) {
+        if (Bot.getGuildConfig(guild).getLoop() == Kvintakord.LoopMode.SINGLE) {
             sb.append(" **| \uD83D\uDD02**");
         }
-        else if (Bot.getGuildConfig(guild).getLoop()) {
+        else if (Bot.getGuildConfig(guild).getLoop() == Kvintakord.LoopMode.ALL) {
             sb.append(" **| \uD83D\uDD01**");
         }
 
