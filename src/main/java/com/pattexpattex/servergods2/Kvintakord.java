@@ -198,8 +198,7 @@ public class Kvintakord {
         private final Guild guild;
         private int trackFails;
 
-        public boolean loop;
-        public boolean queueLoop;
+        public LoopMode loop;
 
         public TrackScheduler(Guild guild, AudioPlayer player) {
 
@@ -209,7 +208,6 @@ public class Kvintakord {
             this.trackFails = 0;
 
             this.loop = Bot.getGuildConfig(guild).getLoop();
-            this.queueLoop = Bot.getGuildConfig(guild).getQueueLoop();
         }
 
         //Methods
@@ -283,10 +281,10 @@ public class Kvintakord {
                     trackFails = 0;
                 }
 
-                if (loop) {
+                if (loop == LoopMode.SINGLE) {
                     playTrack(trackClone);
                 }
-                else if (queueLoop) {
+                else if (loop == LoopMode.ALL) {
                     queue.offer(trackClone);
 
                     nextTrack();
@@ -647,7 +645,7 @@ public class Kvintakord {
         }
 
         if (location != 0) {
-            if (scheduler.queueLoop) {
+            if (scheduler.loop == LoopMode.ALL) {
                 scheduler.queue.add(Objects.requireNonNull(getCurrentTrack(guild)).makeClone());
 
                 for (int i = 0; location > i; i++) {
@@ -662,7 +660,7 @@ public class Kvintakord {
 
         }
         else {
-            if (scheduler.queueLoop) {
+            if (scheduler.loop == LoopMode.ALL) {
                 scheduler.queue.add(Objects.requireNonNull(getCurrentTrack(guild)).makeClone());
 
             }
@@ -703,52 +701,26 @@ public class Kvintakord {
     }
 
     //Loop
-    public static void loopTrack(Guild guild, LoopMode mode) {
+    public static void setLoop(Guild guild, LoopMode mode) {
         TrackScheduler scheduler = getGuildAudioPlayer(guild).scheduler;
         GuildConfig config = Bot.getGuildConfig(guild);
 
-        switch (mode) {
-            case OFF -> {
-                scheduler.loop = false;
-                scheduler.queueLoop = false;
-            }
-            case ALL -> {
-                scheduler.loop = false;
-                scheduler.queueLoop = true;
-            }
-            case SINGLE -> {
-                scheduler.loop = true;
-                scheduler.queueLoop = false;
-            }
-        }
+        scheduler.loop = mode;
 
         config.setLoop(scheduler.loop);
-        config.setQueueLoop(scheduler.queueLoop);
-
-    }
-
-    public enum LoopMode {
-        OFF,
-        SINGLE,
-        ALL
     }
 
     /**
-     * @implNote Queue loop is superior to single track loop
+     * @implNote Loop mode {@code ALL} is superior to {@code SINGLE}
      */
-    public static LoopMode isLooping(Guild guild) {
-        boolean loop = Bot.getGuildConfig(guild).getLoop();
-        boolean queueLoop = Bot.getGuildConfig(guild).getQueueLoop();
+    public enum LoopMode {
+        OFF,
+        ALL,
+        SINGLE
+    }
 
-        if (queueLoop) {
-            return LoopMode.ALL;
-        }
-        else if (loop) {
-            return LoopMode.SINGLE;
-        }
-        else {
-            return LoopMode.OFF;
-        }
+    public static LoopMode getLoop(Guild guild) {
+        return Bot.getGuildConfig(guild).getLoop();
     }
 
 

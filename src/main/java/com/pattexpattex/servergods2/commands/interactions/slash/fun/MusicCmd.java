@@ -19,6 +19,7 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.internal.utils.Checks;
 import org.jetbrains.annotations.NotNull;
@@ -144,34 +145,43 @@ public class MusicCmd implements BotSlash {
 
                 Kvintakord.updateLastQueueMessage(guild);
             }
-            case "music/loop" -> {
+            case "music/loop/get", "music/loop/all", "music/loop/single", "music/loop/off" -> {
                 Kvintakord.isPlayingElseThrowException(guild);
+                event.deferReply(Kvintakord.lastQueueMessageExists(guild)).queue();
+                String msg = " Disabled loop";
 
-                Boolean singleLoop = event.getOption("single") != null ? Objects.requireNonNull(event.getOption("single")).getAsBoolean() : null;
-
-                if (singleLoop != null) {
-                    if (singleLoop) {
-                        Kvintakord.loopTrack(guild, Kvintakord.LoopMode.SINGLE);
-                        event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Single track loop enabled").build()).setEphemeral(Kvintakord.lastQueueMessageExists(guild)).queue();
+                if (subcommand.endsWith("get")) {
+                    event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Current loop mode: `" + Kvintakord.getLoop(guild).name() + "`").build()).queue();
+                    return;
+                }
+                else if (subcommand.endsWith("all")) {
+                    if (Kvintakord.getLoop(guild) != Kvintakord.LoopMode.ALL) {
+                        Kvintakord.setLoop(guild, Kvintakord.LoopMode.ALL);
+                        msg = " Enabled queue loop";
                     }
                     else {
-                        Kvintakord.loopTrack(guild, Kvintakord.LoopMode.OFF);
-                        event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Loop disabled").build()).setEphemeral(Kvintakord.lastQueueMessageExists(guild)).queue();
+                        Kvintakord.setLoop(guild, Kvintakord.LoopMode.OFF);
+                    }
+                }
+                else if (subcommand.endsWith("single")) {
+                    if (Kvintakord.getLoop(guild) != Kvintakord.LoopMode.SINGLE) {
+                        Kvintakord.setLoop(guild, Kvintakord.LoopMode.SINGLE);
+                        msg = " Enabled single track loop";
+                    }
+                    else {
+                        Kvintakord.setLoop(guild, Kvintakord.LoopMode.OFF);
                     }
                 }
                 else {
-                    switch (Kvintakord.isLooping(guild)) {
-                        case OFF, SINGLE -> {
-                            Kvintakord.loopTrack(guild, Kvintakord.LoopMode.ALL);
-                            event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Queue loop enabled").build()).setEphemeral(Kvintakord.lastQueueMessageExists(guild)).queue();
-                        }
-                        case ALL -> {
-                            Kvintakord.loopTrack(guild, Kvintakord.LoopMode.OFF);
-                            event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Loop disabled").build()).setEphemeral(Kvintakord.lastQueueMessageExists(guild)).queue();
-                        }
+                    if (Kvintakord.getLoop(guild) != Kvintakord.LoopMode.OFF) {
+                        Kvintakord.setLoop(guild, Kvintakord.LoopMode.OFF);
+                    }
+                    else {
+                        throw new BotException("Loop is already disabled");
                     }
                 }
 
+                event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + msg).build()).queue();
                 Kvintakord.updateLastQueueMessage(guild);
             }
             case "music/queue" -> {
@@ -412,8 +422,6 @@ public class MusicCmd implements BotSlash {
                 new SubcommandData("stop", "Stop playing music and disconnect"),
                 new SubcommandData("pause", "Pause playback"),
                 new SubcommandData("resume", "Resume playback"), //Alias of pause
-                new SubcommandData("loop", "Loop the current queue")
-                        .addOption(OptionType.BOOLEAN, "single", "Loop the current track"),
                 new SubcommandData("volume", "Get/set the volume")
                         .addOption(OptionType.INTEGER, "volume", "Volume to set"),
                 new SubcommandData("queue", "What is queued"),
@@ -433,6 +441,17 @@ public class MusicCmd implements BotSlash {
                 new SubcommandData("search", "Youtube search")
                         .addOption(OptionType.STRING, "query", "Search query", true),
                 new SubcommandData("clear", "Clear the entire queue")
+        };
+    }
+
+    @Override
+    public SubcommandGroupData[] getSubcommandGroups() {
+        return new SubcommandGroupData[]{
+                new SubcommandGroupData("loop", "Looping system").addSubcommands(
+                        new SubcommandData("get", "Get the current loop mode"),
+                        new SubcommandData("all", "Loop the whole queue"),
+                        new SubcommandData("single", "Loop the current track"),
+                        new SubcommandData("off", "No loop"))
         };
     }
 }

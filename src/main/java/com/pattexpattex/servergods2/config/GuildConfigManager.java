@@ -39,9 +39,8 @@ public class GuildConfigManager {
                             obj.has("poll_id")      ? obj.getString("poll_id")      : null,
                             obj.has("welcome_id")   ? obj.getString("welcome_id")   : null,
                             obj.has("invite")       ? obj.getString("invite")       : null,
-                            obj.has("volume")       ? obj.getInt("volume")          : null,
-                            obj.has("loop")        && obj.getBoolean("loop"),
-                            obj.has("queue_loop")  && obj.getBoolean("queue_loop")
+                            obj.has("loop")         ? obj.getString("loop")         : "off",
+                            obj.has("volume")       ? obj.getInt("volume")          : null
                     ));
                 }
             });
@@ -60,7 +59,7 @@ public class GuildConfigManager {
     }
 
     private @NotNull GuildConfig createDefaultGuildConfig() {
-        return new GuildConfig(this, null, null, null, null, null, null, null, null, false, false);
+        return new GuildConfig(this, null, null, null, null, null, null, null, "off", null);
     }
 
     protected void writeGuildConfig() {
@@ -71,16 +70,15 @@ public class GuildConfigManager {
             GuildConfig guildConfig = this.guildConfig.get(key);
 
             {
-                if (guildConfig.funRoles != null)   obj1.put("fun_roles", guildConfig.funRoles);
-                if (guildConfig.commands != null)   obj1.put("commands", guildConfig.commands);
-                if (guildConfig.mutedId != null)    obj1.put("muted_id", guildConfig.mutedId);
-                if (guildConfig.giveawayId != null) obj1.put("giveaway_id", guildConfig.giveawayId);
-                if (guildConfig.pollId != null)     obj1.put("poll_id", guildConfig.pollId);
-                if (guildConfig.welcomeId != null)  obj1.put("welcome_id", guildConfig.welcomeId);
-                if (guildConfig.invite != null)     obj1.put("invite", guildConfig.invite);
-                if (guildConfig.volume != null)     obj1.put("volume", guildConfig.volume);
-                if (guildConfig.loop)               obj1.put("loop", true);
-                if (guildConfig.queueLoop)          obj1.put("queue_loop", true);
+                if (guildConfig.funRoles != null)       obj1.put("fun_roles", guildConfig.funRoles);
+                if (guildConfig.commands != null)       obj1.put("commands", guildConfig.commands);
+                if (guildConfig.mutedId != null)        obj1.put("muted_id", guildConfig.mutedId);
+                if (guildConfig.giveawayId != null)     obj1.put("giveaway_id", guildConfig.giveawayId);
+                if (guildConfig.pollId != null)         obj1.put("poll_id", guildConfig.pollId);
+                if (guildConfig.welcomeId != null)      obj1.put("welcome_id", guildConfig.welcomeId);
+                if (guildConfig.invite != null)         obj1.put("invite", guildConfig.invite);
+                if (guildConfig.volume != null)         obj1.put("volume", guildConfig.volume);
+                if (!guildConfig.loop.equals("off"))    obj1.put("loop", guildConfig.loop);
             }
 
             obj.put(Long.toString(key), obj1);
