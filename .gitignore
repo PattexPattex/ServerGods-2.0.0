@@ -1,0 +1,10 @@
+/src/test/java/
+/build/classes
+/build/reports
+/build/resources
+/build/test-results
+/build/tmp
+config.json
+server_config.json
+restart.py
+hs_err_pid3644.log
