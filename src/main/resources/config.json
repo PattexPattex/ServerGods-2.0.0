@@ -13,14 +13,14 @@
   "spotify_app_secret": null,
 
   "commands": {
-    "set": true,
+    "config": true,
     "enable": true,
     "about": true,
 
     "ban": true,
     "kick": true,
     "mute": true,
-    "move": true,
+    "wake": true,
 
     "roles": true,
     "ping": true,

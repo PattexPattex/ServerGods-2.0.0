@@ -60,6 +60,7 @@ public class OtherUtil {
 
         try {
             ApplicationInfo info = Bot.getJDA().retrieveApplicationInfo().complete();
+            info.setRequiredScopes("bot", "applications.commands");
             oauthLink = info.isBotPublic() ? info.getInviteUrl(Bot.getRecommendedPermissions()) : "https://github.com/PattexPattex/ServerGods";
 
         }
