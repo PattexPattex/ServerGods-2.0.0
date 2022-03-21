@@ -4,6 +4,7 @@
 /build/resources
 /build/test-results
 /build/tmp
+/build/generated
 config.json
 server_config.json
 restart.py

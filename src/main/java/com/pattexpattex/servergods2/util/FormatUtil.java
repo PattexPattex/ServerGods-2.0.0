@@ -1,8 +1,9 @@
 package com.pattexpattex.servergods2.util;
 
-import com.pattexpattex.servergods2.Bot;
-import com.pattexpattex.servergods2.Kvintakord;
-import com.pattexpattex.servergods2.config.Config;
+import com.pattexpattex.servergods2.core.Bot;
+import com.pattexpattex.servergods2.core.BotException;
+import com.pattexpattex.servergods2.core.Kvintakord;
+import com.pattexpattex.servergods2.core.config.Config;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -14,10 +15,13 @@ import net.dv8tion.jda.internal.utils.Checks;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -70,7 +74,7 @@ public class FormatUtil {
         return defaultEmbed(message, title, null, null);
     }
 
-    public static @NotNull EmbedBuilder defaultEmbed(@Nullable String message) {
+    public static @NotNull EmbedBuilder defaultEmbed(@NotNull String message) {
         return defaultEmbed(message, null, null, null); //Nothing to see here, just a comment
     }
 
@@ -134,16 +138,25 @@ public class FormatUtil {
                 BotEmoji.CODE + "*Try /enable <command> to enable this command.*", "Oops!").setColor(ERR_COLOR);
     }
 
-    public static @NotNull EmbedBuilder errorEmbed(@Nullable Exception e, Class<?> clazz) {
+    public static @NotNull EmbedBuilder errorEmbed(@Nullable Throwable t, Class<?> clazz) {
         EmbedBuilder builder;
+        Logger log = LoggerFactory.getLogger(clazz);
 
-        builder = defaultEmbed(BotEmoji.NO + " There was an error running this command!", "Oops!").setColor(new Color(0xFF4040));
+        builder = defaultEmbed(BotEmoji.NO + " ", "Oops!").setColor(new Color(0xFF4040));
 
-        if (e != null) {
-            builder.addField(BotEmoji.CODE + " What went wrong: ", "`" + e.getClass().getSimpleName() + ": " + e.getMessage() + "`", false);
-
-            LoggerFactory.getLogger(clazz).error("Something broke", e);
+        if (t == null) {
+            t = new Error("Unknown exception, check log for stacktrace");
         }
+
+        builder.appendDescription("`" + t.getClass().getSimpleName() + ": " + t.getMessage() + "`");
+
+        if (t instanceof BotException) {
+            log.warn("Caught a flying BotException at high speeds", t);
+        }
+        else {
+            log.error("Something broke", t);
+        }
+
 
         return builder;
     }
@@ -163,7 +176,7 @@ public class FormatUtil {
     /* ---- Mention a User ---- */
 
     public static void mentionUserAndDelete(@NotNull User user, @NotNull TextChannel channel) {
-        Message msg = channel.sendMessage(BotEmoji.MENTION + user.getAsMention()).complete();
+        Message msg = channel.sendMessage(BotEmoji.MENTION + " " + user.getAsMention()).complete();
 
         deleteAfter(msg, 5);
     }
@@ -253,10 +266,10 @@ public class FormatUtil {
     }
 
     /**
-     * Formatted to a Discord epoch timestamp ({@code < t:1647291600>}), that is formatted like so: {@code Monday, March 14, 2022 at 10:00 PM}.
+     * Formatted to a Discord epoch timestamp ({@code < t:1647291600:f>}), that is formatted like so: {@code March 14, 2022 at 10:00 PM}.
      */
     public static @NotNull String epochTimestamp(long epoch) {
-        return "<t:" + epoch + ">";
+        return "<t:" + epoch + ":f>";
     }
 
     /**
@@ -312,14 +325,17 @@ public class FormatUtil {
 
     /**
      * Possible input formats are:
-     * {@code d h m s}, {@code dd hh mm ss} with or without spaces
-     * and any combination of them, e.g.: {@code 5m}, {@code 1d 2h 3m 4s}.
+     * {@code d h m s}, {@code dd hh mm ss} with or without whitespaces
+     * and any combination of them, e.g.: {@code 5m} or {@code 1d 2h 3m 4s}.
      * It is illegal to pass an input with the time units' order different from {@code d, h, m, s}.
-     * @param time Input
+     *
+     * @param time Formatted input
+     * @return -1 if {@code time} is {@code null}
+     * @throws NumberFormatException if the input is formatted illegally
      */
-    @Contract(value = "null -> fail", pure = true)
+    @Contract(pure = true)
     public static long decodeTimeAlternate(String time) {
-        Checks.notNull(time, "Input");
+        if (time == null) return -1;
 
         Pattern one = Pattern.compile("(\\d{1,2}[dhms]\\s?)+");
 
@@ -460,5 +476,16 @@ public class FormatUtil {
 
     public static ActionRow jumpButton(Message message) {
         return ActionRow.of(Button.link(message.getJumpUrl(), "Original"));
+    }
+
+
+    /* ---- Arrays ---- */
+
+    public static String formatArray(Object[] array) {
+        return Arrays.toString(array).replaceAll("\\[", "").replaceAll("]", "");
+    }
+
+    public static String formatArray(Collection<?> list) {
+        return formatArray(list.toArray());
     }
 }

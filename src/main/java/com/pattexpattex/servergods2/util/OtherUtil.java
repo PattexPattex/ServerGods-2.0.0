@@ -1,6 +1,6 @@
 package com.pattexpattex.servergods2.util;
 
-import com.pattexpattex.servergods2.Bot;
+import com.pattexpattex.servergods2.core.Bot;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.ApplicationInfo;
 import net.dv8tion.jda.api.entities.Emoji;
