@@ -1,10 +1,8 @@
 package com.pattexpattex.servergods2.core.config;
 
-import com.pattexpattex.servergods2.core.commands.BotSlash;
 import com.pattexpattex.servergods2.util.OtherUtil;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,9 +63,7 @@ public class Config {
         return obj;
     }
 
-    public String getConfigValue(@NotNull ConfigValues cv) throws IllegalArgumentException {
-        //Config key
-        String key = cv.toString().toLowerCase();
+    public String getConfigValue(String key) throws IllegalArgumentException {
 
         //Searches for the key
         if (config.has(key)) {
@@ -78,10 +74,7 @@ public class Config {
         else throw new IllegalArgumentException("The key \"" + key + "\" is missing");
     }
 
-    public boolean isCmdEnabled(@NotNull Commands co) throws IllegalArgumentException {
-
-        //Config key
-        String key = co.toString().toLowerCase();
+    public boolean isCmdEnabled(String key) throws IllegalArgumentException {
 
         //Commands config block
         JSONObject cmds = config.getJSONObject("commands");
@@ -96,19 +89,22 @@ public class Config {
     public Activity getActivity() throws IllegalArgumentException {
 
         //Get the config values
-        String activity_type = config.getString(ConfigValues.ACTIVITY_TYPE.toString().toLowerCase());
-        String activity_text = config.getString(ConfigValues.ACTIVITY_TEXT.toString().toLowerCase());
+        String activity_type = config.getString("activity_type");
+        String activity_text = config.getString("activity_text");
 
         Activity ac;
 
         switch (activity_type) {
-            case "PLAYING" -> ac = Activity.playing(activity_text);
-            case "WATCHING" -> ac = Activity.watching(activity_text);
-            case "STREAMING" -> ac = Activity.streaming(activity_text, "https://www.youtube.com/watch?v=dQw4w9WgXcQ%22"); //get rickrolled lol
-            case "LISTENING" -> ac = Activity.listening(activity_text);
-            case "COMPETING" -> ac = Activity.competing(activity_text);
+            case "playing" -> ac = Activity.playing(activity_text);
+            case "watching" -> ac = Activity.watching(activity_text);
+            case "streaming" -> ac = Activity.streaming(activity_text, "https://www.youtube.com/watch?v=dQw4w9WgXcQ%22"); //get rickrolled lol
+            case "listening" -> ac = Activity.listening(activity_text);
+            case "competing" -> ac = Activity.competing(activity_text);
 
-            default -> throw new IllegalArgumentException("Broken config value \"" + activity_type + "\"");
+            default -> {
+                log.warn("Broken config value \"activity_type\", please fix");
+                ac = Activity.playing(activity_text);
+            }
         }
 
         return ac;
@@ -117,7 +113,7 @@ public class Config {
     public OnlineStatus getStatus() {
 
         //Get the config values
-        String status = config.getString(ConfigValues.STATUS.toString().toLowerCase());
+        String status = config.getString("status");
 
         switch (status) {
             case "online", "idle", "dnd", "invisible" -> {
@@ -125,7 +121,7 @@ public class Config {
             }
 
             default -> {
-                log.warn("Broken config value \"status\", defaulting to \"online\"");
+                log.warn("Broken config value \"status\", please fix");
                 return OnlineStatus.ONLINE;
             }
         }
@@ -133,7 +129,7 @@ public class Config {
 
     public String getLyricsProvider() {
 
-        String provider = config.getString(ConfigValues.LYRICS_PROVIDER.toString().toLowerCase());
+        String provider = config.getString("lyrics_provider");
 
         switch (provider) {
             case "A-Z Lyrics", "MusixMatch", "Genius", "LyricsFreak" -> {
@@ -147,52 +143,10 @@ public class Config {
     }
 
     public long getAloneTimeUntilStop() {
-        return config.getLong(ConfigValues.ALONE_TIME_UNTIL_STOP.toString().toLowerCase());
+        return config.getLong("alone_time_until_stop");
     }
 
     public boolean enabledDebugInfo() {
-        return config.getBoolean(ConfigValues.DEBUG_INFO_IN_MESSAGES.name().toLowerCase());
-    }
-
-    public enum ConfigValues {
-        TOKEN,
-        ACTIVITY_TYPE,
-        ACTIVITY_TEXT,
-        STATUS,
-        COLOR,
-        BOT_OWNER,
-        ALONE_TIME_UNTIL_STOP,
-        PREFIX,
-        LYRICS_PROVIDER,
-        DEBUG_INFO_IN_MESSAGES,
-        SPOTIFY_APP_ID,
-        SPOTIFY_APP_SECRET
-    }
-
-    /**
-     * Because of the implementation, the enum referencing a command must be
-     * an all-uppercase variation of the return value of {@link BotSlash#getName()}.
-     */
-    @SuppressWarnings("unused")
-    public enum Commands {
-        CONFIG,
-        ENABLE,
-        ABOUT,
-
-        BAN,
-        KICK,
-        MUTE,
-        WAKE,
-
-        ROLES,
-        PING,
-        INVITE,
-        GIVEAWAY,
-        POLL,
-        RICKROLL,
-        MUSIC,
-        EMOTE,
-        USER,
-        AVATAR
+        return config.getBoolean("debug_info_in_messages");
     }
 }

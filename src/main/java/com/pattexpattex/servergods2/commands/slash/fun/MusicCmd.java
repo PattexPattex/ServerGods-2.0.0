@@ -40,46 +40,7 @@ public class MusicCmd extends BotSlash {
         Member member = event.getMember();
         Guild guild = Objects.requireNonNull(event.getGuild());
 
-        Kvintakord.registerAudioEventListener(guild, new Kvintakord.AudioEventListener() {
-
-            @Override public void onTrackStart(AudioTrack track) {
-                MessageEmbed embed = FormatUtil.kvintakordEmbed(BotEmoji.YES + " Started playing " + FormatUtil.formatTrackLink(track)).build();
-
-                if (Kvintakord.updateLastQueueMessage(guild)) {
-                    return;
-                }
-
-                event.getChannel().sendMessageEmbeds(embed).queue();
-            }
-
-            @Override public void onTrackQueue(AudioTrack track) {
-                MessageEmbed embed = FormatUtil.kvintakordEmbed(BotEmoji.YES + " Added to queue " + FormatUtil.formatTrackLink(track)).build();
-
-                if (Kvintakord.updateLastQueueMessage(guild)) {
-                    return;
-                }
-
-                if (Kvintakord.updateLastTrackQueuedMessage(guild, embed)) {
-                    return;
-                }
-
-                event.getChannel().sendMessageEmbeds(embed).queue((msg) -> Kvintakord.setLastTrackQueuedMessage(guild, msg));
-            }
-
-            @Override public void onTrackNoMatches(String id) {
-                event.getChannel().sendMessageEmbeds(FormatUtil.errorEmbed(new BotException("No matches for query: " + id), SlashEventListener.class).build()).queue();
-            }
-
-            @Override public void onTrackLoadFail(FriendlyException exception) {
-                event.getChannel().sendMessageEmbeds(FormatUtil.errorEmbed(new BotException("Track loading failed: " + exception.getMessage(), exception), SlashEventListener.class).build()).queue();
-            }
-
-            @Override public void onDisconnectFromAudioChannelBecauseEmpty(AudioChannel channel) {
-                MessageEmbed embed = FormatUtil.kvintakordEmbed("\uD83C\uDF99 Disconnected from " + channel.getAsMention() + " because it was empty").build();
-
-                event.getChannel().sendMessageEmbeds(embed).queue();
-            }
-        });
+        Kvintakord.registerAudioEventListener(guild, new Listener(event));
 
         Checks.notNull(guild, "Guild");
         Checks.notNull(member, "Member");
@@ -343,7 +304,7 @@ public class MusicCmd extends BotSlash {
                         event.getHook().editOriginalEmbeds(embed.build()).queue();
 
                         if (Kvintakord.isPlaying(guild)) {
-                            Kvintakord.play(Kvintakord.currentVoiceChannel(guild), Kvintakord.getGuildAudioPlayer(guild), track);
+                            Kvintakord.play(Kvintakord.currentVoiceChannel(guild), Kvintakord.getGuildMusicManager(guild), track);
 
                             Kvintakord.updateLastQueueMessage(guild);
                         }
@@ -360,7 +321,7 @@ public class MusicCmd extends BotSlash {
                                     if (channel == null) {
                                         throw new BotException("You are not in a voice channel");
                                     }
-                                    Kvintakord.play(channel, Kvintakord.getGuildAudioPlayer(guild), track);
+                                    Kvintakord.play(channel, Kvintakord.getGuildMusicManager(guild), track);
 
                                     Kvintakord.updateLastQueueMessage(guild);
                                 })
@@ -471,5 +432,59 @@ public class MusicCmd extends BotSlash {
                         new SubcommandData("single", "Loop the current track"),
                         new SubcommandData("off", "No loop"))
         };
+    }
+
+    public static class Listener extends Kvintakord.AudioEventListener {
+
+        private final Guild guild;
+        private final SlashCommandEvent event;
+
+        Listener(SlashCommandEvent event) {
+            this.event = event;
+            this.guild = event.getGuild();
+        }
+
+        @Override
+        public void onTrackStart(AudioTrack track) {
+            MessageEmbed embed = FormatUtil.kvintakordEmbed(BotEmoji.YES + " Started playing " + FormatUtil.formatTrackLink(track)).build();
+
+            if (Kvintakord.updateLastQueueMessage(guild)) {
+                return;
+            }
+
+            event.getChannel().sendMessageEmbeds(embed).queue();
+        }
+
+        @Override
+        public void onTrackQueue(AudioTrack track) {
+            MessageEmbed embed = FormatUtil.kvintakordEmbed(BotEmoji.YES + " Added to queue " + FormatUtil.formatTrackLink(track)).build();
+
+            if (Kvintakord.updateLastQueueMessage(guild)) {
+                return;
+            }
+
+            if (Kvintakord.updateLastTrackQueuedMessage(guild, embed)) {
+                return;
+            }
+
+            event.getChannel().sendMessageEmbeds(embed).queue((msg) -> Kvintakord.setLastTrackQueuedMessage(guild, msg));
+        }
+
+        @Override
+        public void onTrackNoMatches(String id) {
+            event.getChannel().sendMessageEmbeds(FormatUtil.errorEmbed(new BotException("No matches for query: " + id), SlashEventListener.class).build()).queue();
+        }
+
+        @Override
+        public void onTrackLoadFail(FriendlyException exception) {
+            event.getChannel().sendMessageEmbeds(FormatUtil.errorEmbed(new BotException("Track loading failed: " + exception.getMessage(), exception), SlashEventListener.class).build()).queue();
+        }
+
+        @Override
+        public void onDisconnectFromAudioChannelBecauseEmpty(AudioChannel channel) {
+            MessageEmbed embed = FormatUtil.kvintakordEmbed("\uD83C\uDF99 Disconnected from " + channel.getAsMention() + " because it was empty").build();
+
+            event.getChannel().sendMessageEmbeds(embed).queue();
+        }
     }
 }

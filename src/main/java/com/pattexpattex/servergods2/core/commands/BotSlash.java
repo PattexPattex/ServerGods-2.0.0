@@ -137,7 +137,7 @@ public abstract class BotSlash {
      * @return {@code true} if enabled, else {@code false}
      * */
     public final boolean isEnabled(@NotNull BotSlash cmd) {
-        return Bot.getConfig().isCmdEnabled(Config.Commands.valueOf(cmd.getName().toUpperCase()));
+        return Bot.getConfig().isCmdEnabled(cmd.getName().toLowerCase());
     }
 
     /**

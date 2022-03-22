@@ -5,12 +5,14 @@ import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.channel.ChannelDeleteEvent;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.invite.GuildInviteDeleteEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceGuildDeafenEvent;
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.role.RoleDeleteEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
@@ -222,5 +224,21 @@ public class MiscEventListener extends ListenerAdapter {
             member.deafen(false).queue();
             guild.getAudioManager().setSelfDeafened(true);
         }
+    }
+
+    @Override
+    public void onMessageDelete(@NotNull MessageDeleteEvent event) {
+
+        //Make sure to update the giveaway list
+        Guild guild = event.getGuild();
+        long message = event.getMessageIdLong();
+
+        Bot.getGiveawayManager().removeGiveawayIfPresent(message);
+        Bot.getGiveawayManager().writeGiveaways();
+    }
+
+    @Override
+    public void onReady(@NotNull ReadyEvent event) {
+        Bot.getGiveawayManager().resumeActiveGiveaways();
     }
 }

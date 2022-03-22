@@ -5,7 +5,6 @@ import com.pattexpattex.servergods2.commands.hidden.GetCmd;
 import com.pattexpattex.servergods2.commands.hidden.StopCmd;
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotHidden;
-import com.pattexpattex.servergods2.core.config.Config;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -59,7 +58,7 @@ public class HiddenEventListener extends ListenerAdapter {
         String[] split = SPACE_PATTERN.split(msgWithoutPrefix);
         String cmdName = split[0];
         BotHidden cmd = cmdList.get(cmdName);
-        String owner = Bot.getConfig().getConfigValue(Config.ConfigValues.BOT_OWNER);
+        String owner = Bot.getConfig().getConfigValue("bot_owner");
 
         //Some more checks
         if (cmd == null) return;

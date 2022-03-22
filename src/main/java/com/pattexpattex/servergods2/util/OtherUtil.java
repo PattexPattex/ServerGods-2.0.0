@@ -2,8 +2,7 @@ package com.pattexpattex.servergods2.util;
 
 import com.pattexpattex.servergods2.core.Bot;
 import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.entities.ApplicationInfo;
-import net.dv8tion.jda.api.entities.Emoji;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.interactions.components.Button;
 import org.jetbrains.annotations.Contract;
@@ -117,5 +116,31 @@ public class OtherUtil {
                 event.getMessageChannel().sendMessage(new MessageBuilder().append("`Stacktrace of message ").append(event.getId()).append("`").build()).addFile(file, "stacktrace.txt").queue();
             }
         }
+    }
+
+    public static @Nullable Member findMemberById(long id) {
+
+        for (Guild guild : Bot.getJDA().getGuildCache()) {
+            try {
+                return guild.retrieveMemberById(id).complete();
+            }
+            catch (RuntimeException ignored) {}
+        }
+
+        return null;
+    }
+
+    public static @Nullable Message findMessageById(long id) {
+
+        for (Guild guild : Bot.getJDA().getGuildCache()) {
+            for (TextChannel channel : guild.getTextChannelCache()) {
+                try {
+                    return channel.retrieveMessageById(id).complete();
+                }
+                catch (RuntimeException ignored) {}
+            }
+        }
+
+        return null;
     }
 }

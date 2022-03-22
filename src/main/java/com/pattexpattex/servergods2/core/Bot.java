@@ -4,6 +4,7 @@ import com.jagrosh.jdautilities.commons.waiter.EventWaiter;
 import com.pattexpattex.servergods2.core.config.Config;
 import com.pattexpattex.servergods2.core.config.GuildConfig;
 import com.pattexpattex.servergods2.core.config.GuildConfigManager;
+import com.pattexpattex.servergods2.core.giveaway.GiveawayManager;
 import com.pattexpattex.servergods2.core.listeners.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -31,9 +32,11 @@ public class Bot {
 
     private static Config config;
     private static GuildConfigManager guildConfigManager;
-    private static ScheduledExecutorService scheduledExecutorService;
+    private static GiveawayManager giveawayManager;
+    private static ScheduledExecutorService executors;
     private static EventWaiter waiter;
     private static JDA jda;
+
     private static Logger log;
     private static boolean debug;
 
@@ -66,20 +69,21 @@ public class Bot {
         log = LoggerFactory.getLogger(Bot.class);
 
         //Event waiting
-        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
-        waiter = new EventWaiter(scheduledExecutorService, false);
+        executors = Executors.newSingleThreadScheduledExecutor();
+        waiter = new EventWaiter(executors, false);
 
         //Load the configs
         config = new Config();
         guildConfigManager = new GuildConfigManager();
-        String prefix = getConfig().getConfigValue(Config.ConfigValues.PREFIX);
+        giveawayManager = new GiveawayManager();
         debug = getConfig().enabledDebugInfo();
+        String prefix = getConfig().getConfigValue("prefix");
 
 
 
         //Try to initialize and start the bot
         try {
-            JDABuilder builder = JDABuilder.createDefault(config.getConfigValue(Config.ConfigValues.TOKEN))
+            JDABuilder builder = JDABuilder.createDefault(config.getConfigValue("token"))
                     .enableCache(CacheFlag.VOICE_STATE, CacheFlag.values())
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(EnumSet.allOf(GatewayIntent.class))
@@ -117,7 +121,7 @@ public class Bot {
         Kvintakord.shutdown();
 
         log.info("Shutting down ScheduledExecutorService");
-        scheduledExecutorService.shutdown();
+        executors.shutdown();
 
         log.info("Shutting down EventWaiter");
         waiter.shutdown();
@@ -141,12 +145,16 @@ public class Bot {
         return config;
     }
 
+    public static GiveawayManager getGiveawayManager() {
+        return giveawayManager;
+    }
+
     public static Permission[] getRecommendedPermissions() {
         return permissions;
     }
 
-    public static ScheduledExecutorService getScheduledExecutor() {
-        return scheduledExecutorService;
+    public static ScheduledExecutorService getExecutor() {
+        return executors;
     }
 
     public static EventWaiter getWaiter() {

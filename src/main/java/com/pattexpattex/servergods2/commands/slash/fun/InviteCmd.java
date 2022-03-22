@@ -7,7 +7,6 @@ import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Invite;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -42,7 +41,7 @@ public class InviteCmd extends BotSlash {
 
                 String invite = channel.createInvite().setMaxAge(maxAgeRaw).setMaxUses(maxUse).complete().getUrl();
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " *This invite is valid for `" + FormatUtil.formatTimeAlternate(maxAgeRaw) + "` and has a max use of `" + maxUse + "`*", invite).build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " *This invite is valid for `" + FormatUtil.formatTimeAlternate(maxAgeRaw) + "` and has a max use of `" + maxUse + "`*").setTitle(invite, invite).build()).queue();
             }
             case "invite/permanent/refresh", "invite/permanent/clear" -> {
                 if (!member.hasPermission(Permission.MANAGE_SERVER)) {
@@ -57,10 +56,10 @@ public class InviteCmd extends BotSlash {
                 });
 
                 if (commandPath.endsWith("refresh")) {
-                    Invite invite = channel.createInvite().setMaxUses(0).setMaxAge(0).complete();
-                    Bot.getGuildConfig(guild).setInvite(invite.getUrl());
+                    String invite = channel.createInvite().setMaxUses(0).setMaxAge(0).complete().getUrl();
+                    Bot.getGuildConfig(guild).setInvite(invite);
 
-                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " *This is the new permanent invite*", invite.getUrl()).build()).queue();
+                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " *This is the new permanent invite*").setTitle(invite, invite).build()).queue();
                 }
                 else {
                     String invite = Bot.getGuildConfig(guild).getInvite();
@@ -83,7 +82,7 @@ public class InviteCmd extends BotSlash {
                     Bot.getGuildConfig(guild).setInvite(invite);
                 }
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " *This is the current permanent invite*", invite).build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " *This is the current permanent invite*").setTitle(invite, invite).build()).queue();
             }
         }
     }

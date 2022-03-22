@@ -3,7 +3,6 @@ package com.pattexpattex.servergods2.util;
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.BotException;
 import com.pattexpattex.servergods2.core.Kvintakord;
-import com.pattexpattex.servergods2.core.config.Config;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -32,7 +31,7 @@ public class FormatUtil {
     private static final String avatarUrl = Bot.getJDA().getSelfUser().getEffectiveAvatarUrl();
     private static final String kvintakordAvatar = "https://raw.githubusercontent.com/PattexPattex/ServerGods/master/musicGods.png";
 
-    public static final Color COLOR = new Color((int) Long.parseLong(Bot.getConfig().getConfigValue(Config.ConfigValues.COLOR), 16));
+    public static final Color COLOR = new Color((int) Long.parseLong(Bot.getConfig().getConfigValue("color"), 16));
     public static final Color ERR_COLOR = new Color(0xFF2626);
     public static final Color KVINTAKORD_COLOR = new Color(0xDFE393);
 
@@ -145,7 +144,7 @@ public class FormatUtil {
         builder = defaultEmbed(BotEmoji.NO + " ", "Oops!").setColor(new Color(0xFF4040));
 
         if (t == null) {
-            t = new Error("Unknown exception, check log for stacktrace");
+            t = new Exception("null");
         }
 
         builder.appendDescription("`" + t.getClass().getSimpleName() + ": " + t.getMessage() + "`");
@@ -437,41 +436,34 @@ public class FormatUtil {
 
     /* ---- Giveaways ---- */
 
-    private static final String REACT = BotEmoji.REACTION + " React with \uD83C\uDF89 to enter";
-    private static String FORMAT_WINNERS_NUM(int winners) {
-        return winners == 1 ? "" : "\n" + BotEmoji.INVITE + " `" + winners + "` winners";
-    }
-    private static String FORMAT_REWARD(String reward) {
-        return BotEmoji.GIFT + " " + (reward.toLowerCase().contains("nitro") ? BotEmoji.NITRO : "") + " " + reward;
-    }
-    private static String FORMAT_TIME(OffsetDateTime time) {
-        return BotEmoji.LOADING + " Ends " + FormatUtil.epochTimestampRelative(time.toEpochSecond()) + "";
-    }
+    private static final String REACT = " React with \uD83C\uDF89 to enter";
 
-    public static EmbedBuilder runningGiveawayEmbed(int winners, OffsetDateTime time, String reward) {
+    public static EmbedBuilder runningGiveawayEmbed(int winners, long end, String reward, Member host) {
         return defaultEmbed(
                 REACT + "\n" +
-                        FORMAT_WINNERS_NUM(winners) +
-                        FORMAT_TIME(time),
-                FORMAT_REWARD(reward));
+                        (winners == 1 ? BotEmoji.PERSON + " 1 winner" : BotEmoji.PERSON + " " + winners + " winners") + "\n" +
+                        BotEmoji.LOADING + " Ends " + FormatUtil.epochTimestampRelative(end) + "\n" +
+                        BotEmoji.MENTION + " Host: " + host.getAsMention(),
+
+                reward);
     }
 
     public static EmbedBuilder endedGiveawayEmbed(String winners, Member host, String reward) {
         return defaultEmbed(
                 "\uD83C\uDF7E Winners: " + winners + "\n" +
                         BotEmoji.MENTION + " DM " + host.getAsMention() + " to claim the reward!",
-                FORMAT_REWARD(reward));
+                reward);
     }
 
     public static EmbedBuilder noWinnersGiveawayEmbed(String reward) {
-        return defaultEmbed("\u2753 Winners: no one\n*`Waiting for re-roll...`*", FORMAT_REWARD(reward));
+        return defaultEmbed("\u2753 Winners: no one\n*`Waiting for re-roll...`*", reward);
     }
 
     public static EmbedBuilder rerollGiveawayEmbed(String winners, Member host, String reward) {
         return defaultEmbed(
                 "\uD83C\uDF7E Re-roll winners: " + winners + "\n" +
                         BotEmoji.MENTION + " DM " + host.getAsMention() + " to claim the reward!",
-                FORMAT_REWARD(reward));
+                reward);
     }
 
     public static ActionRow jumpButton(Message message) {
@@ -485,7 +477,7 @@ public class FormatUtil {
         return Arrays.toString(array).replaceAll("\\[", "").replaceAll("]", "");
     }
 
-    public static String formatArray(Collection<?> list) {
-        return formatArray(list.toArray());
+    public static String formatArray(Collection<?> collection) {
+        return formatArray(collection.toArray());
     }
 }

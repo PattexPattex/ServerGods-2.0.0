@@ -3,7 +3,6 @@ package com.pattexpattex.servergods2.core;
 import com.jagrosh.jlyrics.Lyrics;
 import com.jagrosh.jlyrics.LyricsClient;
 import com.neovisionaries.i18n.CountryCode;
-import com.pattexpattex.servergods2.core.config.Config;
 import com.pattexpattex.servergods2.core.config.GuildConfig;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
@@ -52,12 +51,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-//TODO optimize, split into separate classes,
-// maybe change how Spotify support works with a SpotifyAudioSourceManager and everything
 /**
  * Everything music related.
+ * TODO: optimize, split into separate classes, maybe change how Spotify support works with a SpotifyAudioSourceManager and everything
  * */
-//@SuppressWarnings("unused")
 public class Kvintakord {
 
     /* Don't let anyone instantiate this class */
@@ -95,8 +92,8 @@ public class Kvintakord {
         AudioSourceManagers.registerRemoteSources(playerManager);
         AudioSourceManagers.registerLocalSource(playerManager);
 
-        String id = Bot.getConfig().getConfigValue(Config.ConfigValues.SPOTIFY_APP_ID);
-        String secret = Bot.getConfig().getConfigValue(Config.ConfigValues.SPOTIFY_APP_SECRET);
+        String id = Bot.getConfig().getConfigValue("spotify_app_id");
+        String secret = Bot.getConfig().getConfigValue("spotify_app_secret");
 
         useSpotify = true;
 
@@ -126,7 +123,7 @@ public class Kvintakord {
 
     /* ---- Audio Playback Core ---- */
 
-    public static synchronized @NotNull GuildMusicManager getGuildAudioPlayer(@NotNull Guild guild) {
+    public static synchronized @NotNull GuildMusicManager getGuildMusicManager(@NotNull Guild guild) {
 
         long guildId = guild.getIdLong();
         GuildMusicManager musicManager = musicManagers.get(guildId);
@@ -296,7 +293,7 @@ public class Kvintakord {
                 }
                 else {
                     for (Guild guild : Bot.getJDA().getGuilds()) {
-                        if (getGuildAudioPlayer(guild).player == player) {
+                        if (getGuildMusicManager(guild).player == player) {
                             stop(guild);
                             break;
                         }
@@ -307,7 +304,7 @@ public class Kvintakord {
             }
             else if (endReason != AudioTrackEndReason.REPLACED) {
                 for (Guild guild : Bot.getJDA().getGuilds()) {
-                    if (getGuildAudioPlayer(guild).player == player) {
+                    if (getGuildMusicManager(guild).player == player) {
                         stop(guild);
                         break;
                     }
@@ -446,11 +443,8 @@ public class Kvintakord {
         }
     }
 
-    public static void registerAudioEventListener(@NotNull Guild guild, AudioEventListener listener) {
-        audioEventListeners.putIfAbsent(guild.getIdLong(), listener);
-    }
-    public static void removeAudioEventListener(@NotNull Guild guild, AudioEventListener listener) {
-        audioEventListeners.remove(guild.getIdLong(), listener);
+    public static void registerAudioEventListener(@NotNull Guild guild, AudioEventListener audioEventListener) {
+        audioEventListeners.put(guild.getIdLong(), audioEventListener);
     }
 
 
@@ -459,7 +453,7 @@ public class Kvintakord {
     //Load and play a track
     public static void loadAndPlay(final AudioChannel channel, final String id, boolean playFirst) {
 
-        GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
+        GuildMusicManager musicManager = getGuildMusicManager(channel.getGuild());
         Track spotifyTrack = null;
 
         String trackId = id;
@@ -568,18 +562,18 @@ public class Kvintakord {
         return getCurrentTrack(guild) != null;
     }
     public static boolean pause(Guild guild) {
-        AudioPlayer player = getGuildAudioPlayer(guild).player;
+        AudioPlayer player = getGuildMusicManager(guild).player;
         player.setPaused(!player.isPaused());
 
         return player.isPaused();
     }
     public static boolean isPaused(Guild guild) {
-        return getGuildAudioPlayer(guild).player.isPaused();
+        return getGuildMusicManager(guild).player.isPaused();
     }
 
     //Stop and clean-up
     public static void stop(Guild guild) {
-        GuildMusicManager musicManager = getGuildAudioPlayer(guild);
+        GuildMusicManager musicManager = getGuildMusicManager(guild);
 
         forgetSpotifyTrackReference(musicManager.player.getPlayingTrack());
         getQueue(guild).forEach(Kvintakord::forgetSpotifyTrackReference);
@@ -602,7 +596,7 @@ public class Kvintakord {
             throw new IndexOutOfBoundsException("Given " + vol + ", expected between 1000 and 0");
         }
 
-        AudioPlayer player = getGuildAudioPlayer(guild).player;
+        AudioPlayer player = getGuildMusicManager(guild).player;
         player.setVolume(vol);
 
         Bot.getGuildConfig(guild).setVolume(vol);
@@ -610,7 +604,7 @@ public class Kvintakord {
         AudioEventDispatcher.onPlaybackVolumeChange(guild, player);
     }
     public static int getVolume(Guild guild) {
-        return getGuildAudioPlayer(guild).player.getVolume();
+        return getGuildMusicManager(guild).player.getVolume();
     }
 
 
@@ -621,7 +615,7 @@ public class Kvintakord {
      */
     @Contract("_ -> new")
     public static @NotNull List<AudioTrack> getQueue(Guild guild) {
-        return getGuildAudioPlayer(guild).scheduler.queue.stream().toList();
+        return getGuildMusicManager(guild).scheduler.queue.stream().toList();
     }
     public static AudioTrack getTrack(int pos, Guild guild) {
         List<AudioTrack> queue = getQueue(guild);
@@ -633,12 +627,12 @@ public class Kvintakord {
         return queue.get(pos);
     }
     public static void clearQueue(Guild guild) {
-        getGuildAudioPlayer(guild).scheduler.queueClear();
+        getGuildMusicManager(guild).scheduler.queueClear();
     }
 
     //Track skipping
     public static boolean skipToTrack(int location, Guild guild) throws IndexOutOfBoundsException {
-        TrackScheduler scheduler = getGuildAudioPlayer(guild).scheduler;
+        TrackScheduler scheduler = getGuildMusicManager(guild).scheduler;
         List<AudioTrack> queue = getQueue(guild);
 
         if (location < 0 || location > queue.size()) {
@@ -674,7 +668,7 @@ public class Kvintakord {
     //Track moving
     public static void moveTrack(int from, int to, Guild guild) throws IndexOutOfBoundsException {
         List<AudioTrack> queue = new ArrayList<>(getQueue(guild));
-        TrackScheduler scheduler = getGuildAudioPlayer(guild).scheduler;
+        TrackScheduler scheduler = getGuildMusicManager(guild).scheduler;
 
         if (from < 0 || from >= queue.size()) {
             throw new IndexOutOfBoundsException("Given " + from + ", expected between " + (queue.size() + 1) + " and 0");
@@ -697,12 +691,12 @@ public class Kvintakord {
             throw new IndexOutOfBoundsException("Given " + location + ", expected between " + queue.size() + " and 0");
         }
 
-        return getGuildAudioPlayer(guild).scheduler.queueRemove(queue.get(location));
+        return getGuildMusicManager(guild).scheduler.queueRemove(queue.get(location));
     }
 
     //Loop
     public static void setLoop(Guild guild, LoopMode mode) {
-        TrackScheduler scheduler = getGuildAudioPlayer(guild).scheduler;
+        TrackScheduler scheduler = getGuildMusicManager(guild).scheduler;
         GuildConfig config = Bot.getGuildConfig(guild);
 
         scheduler.loop = mode;
@@ -728,7 +722,7 @@ public class Kvintakord {
 
     //Current track
     public static @Nullable AudioTrack getCurrentTrack(Guild guild) {
-        return getGuildAudioPlayer(guild).player.getPlayingTrack();
+        return getGuildMusicManager(guild).player.getPlayingTrack();
     }
 
     //Track seeking
@@ -842,7 +836,9 @@ public class Kvintakord {
             try {
                 message = message.getChannel().retrieveMessageById(message.getId()).complete();
             }
-            catch (Exception ignored) {}
+            catch (Exception e) {
+                message = null;
+            }
         }
 
         if (message != null) {
@@ -880,7 +876,9 @@ public class Kvintakord {
             try {
                 message = message.getChannel().retrieveMessageById(message.getId()).complete();
             }
-            catch (Exception ignored) {}
+            catch (Exception e) {
+                message = null;
+            }
         }
 
         if (message != null) {
@@ -904,7 +902,7 @@ public class Kvintakord {
             aloneTimeUntilStop = Bot.getConfig().getAloneTimeUntilStop();
 
             if (aloneTimeUntilStop > 0) {
-                Bot.getScheduledExecutor().scheduleWithFixedDelay(this::check, 0, 5, TimeUnit.SECONDS);
+                Bot.getExecutor().scheduleWithFixedDelay(this::check, 0, 5, TimeUnit.SECONDS);
             }
         }
 
@@ -964,7 +962,7 @@ public class Kvintakord {
         if (!audioManager.isConnected()) {
             audioManager.openAudioConnection(channel);
 
-            getGuildAudioPlayer(channel.getGuild()).player.setPaused(false);
+            getGuildMusicManager(channel.getGuild()).player.setPaused(false);
 
             AudioEventDispatcher.onConnectToAudioChannel(channel.getGuild(), channel);
         }
@@ -1128,7 +1126,7 @@ public class Kvintakord {
 
             spotifyApi.setAccessToken(credentials.getAccessToken());
 
-            Bot.getScheduledExecutor().schedule(Kvintakord::startSpotifyApi, credentials.getExpiresIn() - 60, TimeUnit.SECONDS);
+            Bot.getExecutor().schedule(Kvintakord::startSpotifyApi, credentials.getExpiresIn() - 60, TimeUnit.SECONDS);
             log.info("Retrieved Spotify access token, expires in: " + credentials.getExpiresIn());
         }
         catch (Exception e) {

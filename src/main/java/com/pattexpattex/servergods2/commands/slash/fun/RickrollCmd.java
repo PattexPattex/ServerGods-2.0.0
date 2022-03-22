@@ -44,7 +44,7 @@ public class RickrollCmd extends BotSlash {
                     event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Rickrolled " + member.getAsMention() + " in " + audioChannel.getAsMention()).build()).queue(null, this::rethrow);
                 }
 
-                Bot.getScheduledExecutor().schedule(() -> Kvintakord.skipToTrack(0, guild), 62, TimeUnit.SECONDS);
+                Bot.getExecutor().schedule(() -> Kvintakord.skipToTrack(0, guild), 62, TimeUnit.SECONDS);
             }
             case "rickroll/stop" -> {
                 if (Kvintakord.currentVoiceChannel(guild) == null) {
