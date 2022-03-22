@@ -1,6 +1,6 @@
 {
   "token": null,
-  "activity_type": "PLAYING",
+  "activity_type": "playing",
   "activity_text": "/about",
   "status": "online",
   "color": "FFFFFF",
@@ -9,8 +9,8 @@
   "prefix": "$$$",
   "lyrics_provider": "A-Z Lyrics",
   "debug_info_in_messages": false,
-  "spotify_app_id": null,
-  "spotify_app_secret": null,
+  "spotify_app_id": "",
+  "spotify_app_secret": "",
 
   "commands": {
     "config": true,

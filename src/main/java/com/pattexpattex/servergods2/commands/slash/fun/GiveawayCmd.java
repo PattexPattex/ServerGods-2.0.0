@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
@@ -32,7 +33,7 @@ public class GiveawayCmd extends BotSlash {
 
         switch (subcommand) {
             case "giveaway/new" -> {
-                Member host = event.getOption("host") != null ? Objects.requireNonNull(event.getOption("host")).getAsMember() : event.getMember();
+                User host = event.getOption("host") != null ? Objects.requireNonNull(event.getOption("host")).getAsUser() : event.getUser();
                 int winners = event.getOption("winners") != null ? (int) Objects.requireNonNull(event.getOption("winners")).getAsLong() : 1;
                 String reward = Objects.requireNonNull(event.getOption("reward")).getAsString();
                 String timeRaw = Objects.requireNonNull(event.getOption("time")).getAsString();

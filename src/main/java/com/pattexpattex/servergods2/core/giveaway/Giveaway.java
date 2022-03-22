@@ -4,7 +4,6 @@ import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import com.pattexpattex.servergods2.util.OtherUtil;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
@@ -16,6 +15,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -28,7 +28,7 @@ public class Giveaway extends Thread {
     protected final String reward;
 
     private String mention;
-    private Member host;
+    private User host;
     private Message message;
     private ScheduledFuture<?> future;
     private final long now;
@@ -201,8 +201,13 @@ public class Giveaway extends Thread {
     }
 
     private void init() {
-        if (message == null) message = OtherUtil.findMessageById(id);
-        if (host == null) host = OtherUtil.findMemberById(hostId);
+        try {
+            if (message == null) message = OtherUtil.findMessageById(id);
+            if (host == null) host = OtherUtil.findUserById(hostId);
+        }
+        catch (ExecutionException | InterruptedException e) {
+            failed(e);
+        }
 
         if (message == null || host == null) failed(null);
 

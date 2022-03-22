@@ -438,7 +438,7 @@ public class FormatUtil {
 
     private static final String REACT = " React with \uD83C\uDF89 to enter";
 
-    public static EmbedBuilder runningGiveawayEmbed(int winners, long end, String reward, Member host) {
+    public static EmbedBuilder runningGiveawayEmbed(int winners, long end, String reward, User host) {
         return defaultEmbed(
                 REACT + "\n" +
                         (winners == 1 ? BotEmoji.PERSON + " 1 winner" : BotEmoji.PERSON + " " + winners + " winners") + "\n" +
@@ -448,7 +448,7 @@ public class FormatUtil {
                 reward);
     }
 
-    public static EmbedBuilder endedGiveawayEmbed(String winners, Member host, String reward) {
+    public static EmbedBuilder endedGiveawayEmbed(String winners, User host, String reward) {
         return defaultEmbed(
                 "\uD83C\uDF7E Winners: " + winners + "\n" +
                         BotEmoji.MENTION + " DM " + host.getAsMention() + " to claim the reward!",
@@ -459,7 +459,7 @@ public class FormatUtil {
         return defaultEmbed("\u2753 Winners: no one\n*`Waiting for re-roll...`*", reward);
     }
 
-    public static EmbedBuilder rerollGiveawayEmbed(String winners, Member host, String reward) {
+    public static EmbedBuilder rerollGiveawayEmbed(String winners, User host, String reward) {
         return defaultEmbed(
                 "\uD83C\uDF7E Re-roll winners: " + winners + "\n" +
                         BotEmoji.MENTION + " DM " + host.getAsMention() + " to claim the reward!",

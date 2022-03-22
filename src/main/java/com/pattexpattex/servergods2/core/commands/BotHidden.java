@@ -5,6 +5,6 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class BotHidden {
 
-    public abstract void run(@NotNull MessageReceivedEvent event, @NotNull String[] args);
+    public abstract void run(@NotNull MessageReceivedEvent event, @NotNull String[] args) throws Exception;
 
 }
