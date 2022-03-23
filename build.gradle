@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.pattexpattex'
-version '2.1.0_pre2'
+version '2.1.0_pre3'
 
 repositories {
     mavenCentral()
