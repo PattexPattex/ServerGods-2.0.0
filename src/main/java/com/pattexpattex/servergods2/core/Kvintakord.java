@@ -805,8 +805,8 @@ public class Kvintakord {
             return true;
         }
         else if (message != null && !isPlaying(guild)) {
-            message.editMessageEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Playback ended").build()).complete()
-                    .editMessageComponents(Collections.emptyList()).queue();
+            message.editMessageEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Playback ended").build()).queue();
+            message.editMessageComponents(Collections.emptyList()).queue();
 
             removeLastQueueMessage(guild);
             return true;

@@ -12,10 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.ExecutionException;
+import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -48,7 +45,7 @@ public class Giveaway extends Thread {
         checkIsCompleted();
     }
 
-    Giveaway(GiveawayManager manager, JSONObject o) {
+    protected Giveaway(GiveawayManager manager, JSONObject o) {
         this(manager, o.getLong("id"), o.getString("reward"), o.getInt("winners"), o.getLong("end"), o.getLong("host_id"));
     }
 
@@ -64,7 +61,14 @@ public class Giveaway extends Thread {
             failed(e);
         }
 
-        waitUntilEnd();
+        //Bot.getExecutor().schedule(() -> end(false), end - now, TimeUnit.SECONDS);
+
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                end(false);
+            }
+        }, Date.from(Instant.ofEpochSecond(end)));
     }
 
     public void end(boolean reroll) {
@@ -143,6 +147,7 @@ public class Giveaway extends Thread {
 
         message.editMessage("_was a giveaway once..._").queue();
         message.editMessageEmbeds(FormatUtil.defaultEmbed("Giveaway canceled").build()).queue();
+        message.removeReaction("\uD83C\uDF89").queue();
     }
 
     public void reroll() {
@@ -161,19 +166,6 @@ public class Giveaway extends Thread {
         end(true);
     }
 
-    protected void waitUntilEnd() {
-        if (completed) return;
-
-        try {
-            Thread.sleep(((int) (end <= now ? 0 : end - now)) * 1000L);
-        }
-        catch (InterruptedException e) {
-            log.warn("Thread did not sleep properly", e);
-        }
-
-        end(false);
-    }
-
     protected JSONObject toJSON() {
         JSONObject o = new JSONObject();
 
@@ -186,7 +178,7 @@ public class Giveaway extends Thread {
         return o;
     }
 
-    private void failed(Throwable t) throws RuntimeException {
+    private void failed(Throwable t) {
         manager.removeGiveaway(this);
         manager.writeGiveaways();
         if (future != null) future.cancel(false);
@@ -196,20 +188,13 @@ public class Giveaway extends Thread {
         completed = true;
 
         log.warn("Giveaway with id \"" + id + "\" failed", t);
-
-        throw new RuntimeException(t);
     }
 
     private void init() {
-        try {
-            if (message == null) message = OtherUtil.findMessageById(id);
-            if (host == null) host = OtherUtil.findUserById(hostId);
-        }
-        catch (ExecutionException | InterruptedException e) {
-            failed(e);
-        }
+        if (message == null) message = OtherUtil.findMessageById(id);
+        if (host == null) host = OtherUtil.findUserById(hostId);
 
-        if (message == null || host == null) failed(null);
+        if (message == null || host == null) failed(new NullPointerException());
 
         Role role = Bot.getGuildConfig(message.getGuild()).getGiveaway(message.getGuild());
         mention = (role == null ? "@everyone": role.getAsMention());
@@ -219,9 +204,6 @@ public class Giveaway extends Thread {
         if (end < now) {
             completed = true;
 
-            if (future != null) {
-                future.cancel(false);
-            }
             future = Bot.getExecutor().schedule(() -> {
                 manager.removeGiveaway(this);
                 manager.writeGiveaways();

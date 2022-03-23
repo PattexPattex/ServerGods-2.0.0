@@ -4,9 +4,7 @@ import com.pattexpattex.servergods2.core.Bot;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
-import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.interactions.components.Button;
-import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -17,8 +15,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 public class OtherUtil {
 
@@ -122,44 +118,42 @@ public class OtherUtil {
         }
     }
 
-    public static @Nullable Member findMemberById(long id) {
+    public static @Nullable User findUserById(long id) {
 
-        for (Guild guild : Bot.getJDA().getGuildCache()) {
-            try {
-                return guild.retrieveMemberById(id).complete();
+        try {
+            return Bot.getJDA().retrieveUserById(id).complete();
+        }
+        catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    /**
+     * @implNote Tends to freeze for a couple of moments
+     */
+    public static @Nullable Message findMessageById(long id) {
+
+        for (Guild guild : Bot.getJDA().getGuilds()) {
+            for (TextChannel channel : guild.getTextChannelCache()) {
+                try {
+                    return channel.retrieveMessageById(id).complete();
+                }
+                catch (RuntimeException ignored) {}
             }
-            catch (RuntimeException ignored) {}
+            for (NewsChannel channel : guild.getNewsChannelCache()) {
+                try {
+                    return channel.retrieveMessageById(id).complete();
+                }
+                catch (RuntimeException ignored) {}
+            }
+            for (ThreadChannel channel : guild.getThreadChannelCache()) {
+                try {
+                    return channel.retrieveMessageById(id).complete();
+                }
+                catch (RuntimeException ignored) {}
+            }
         }
 
         return null;
-    }
-
-    public static @Nullable User findUserById(long id) throws ExecutionException, InterruptedException {
-        CompletableFuture<User> future = new CompletableFuture<>();
-
-        Bot.getJDA().retrieveUserById(id).queue(future::complete, (f) -> {
-            if (f instanceof ErrorResponseException &&
-                    ((ErrorResponseException) f).getErrorResponse() != ErrorResponse.UNKNOWN_USER) {
-                log.warn("Failed retrieving user", f);
-            }
-        });
-
-        return future.get();
-    }
-
-    public static @Nullable Message findMessageById(long id) throws ExecutionException, InterruptedException {
-        CompletableFuture<Message> future = new CompletableFuture<>();
-
-        for (Guild guild : Bot.getJDA().getGuilds()) {
-            for (TextChannel channel : guild.getTextChannels()) {
-                channel.retrieveMessageById(id).queue(future::complete, (f) -> {
-                    if (f instanceof ErrorResponseException &&
-                    ((ErrorResponseException) f).getErrorResponse() != ErrorResponse.UNKNOWN_MESSAGE) {
-                            log.warn("Failed retrieving message", f);
-                    }});
-            }
-        }
-
-        return future.get();
     }
 }

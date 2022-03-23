@@ -3,6 +3,7 @@ package com.pattexpattex.servergods2.core.listeners;
 import com.pattexpattex.servergods2.commands.hidden.ClearCmd;
 import com.pattexpattex.servergods2.commands.hidden.GetCmd;
 import com.pattexpattex.servergods2.commands.hidden.StopCmd;
+import com.pattexpattex.servergods2.commands.hidden.TestCmd;
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotHidden;
 import com.pattexpattex.servergods2.util.FormatUtil;
@@ -40,6 +41,7 @@ public class HiddenEventListener extends ListenerAdapter {
         cmdList.put("stop", new StopCmd());
         cmdList.put("clear", new ClearCmd());
         cmdList.put("get", new GetCmd());
+        cmdList.put("test", new TestCmd());
     }
 
     @Override

@@ -53,10 +53,14 @@ public class RolesCmd extends BotSlash {
             }
         });
 
+        enabledRolesIds.removeIf(id -> guild.getRoleById(id) == null);
+
+        Bot.getGuildConfig(guild).setFunRoles(enabledRolesIds);
+
         enabledRolesIds.forEach((roleId) -> availableOptions.add(SelectOption.of(Objects.requireNonNull(guild.getRoleById(roleId)).getName(), roleId)));
 
         switch (commandPath) {
-            case ("role/select") -> {
+            case ("roles/select") -> {
                 Member optionMember = event.getOption("member") != null ? Objects.requireNonNull(event.getOption("member")).getAsMember() : null;
 
                 if (optionMember != null) {
@@ -89,7 +93,7 @@ public class RolesCmd extends BotSlash {
                             .complete().editMessageComponents(ActionRow.of(new GetRolesSelect().setup(availableOptions, selectedOptions))).queue();
                 }
             }
-            case ("role/edit") -> {
+            case ("roles/edit") -> {
                 if (!member.hasPermission(Permission.MANAGE_ROLES)) {
                     event.getHook().editOriginalEmbeds(FormatUtil.noPermissionEmbed(Permission.MANAGE_SERVER).build()).queue();
                     return;

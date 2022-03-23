@@ -231,9 +231,9 @@ public class MiscEventListener extends ListenerAdapter {
 
         //Make sure to update the giveaway list
         Guild guild = event.getGuild();
-        long message = event.getMessageIdLong();
+        long id = event.getMessageIdLong();
 
-        Bot.getGiveawayManager().removeGiveawayIfPresent(message);
+        Bot.getGiveawayManager().removeGiveaway(id);
         Bot.getGiveawayManager().writeGiveaways();
     }
 

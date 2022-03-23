@@ -47,11 +47,7 @@ public class GiveawayManager {
         giveaways.remove(giveaway.id);
     }
 
-    public void removeGiveawayIfPresent(long id) {
-        Giveaway giveaway = giveaways.get(id);
-
-        if (giveaway == null) return;
-
+    public void removeGiveaway(long id) {
         giveaways.remove(id);
     }
 
@@ -75,6 +71,6 @@ public class GiveawayManager {
     }
 
     public void resumeActiveGiveaways() {
-        giveaways.forEach((id, giveaway) -> giveaway.waitUntilEnd());
+        giveaways.forEach((id, giveaway) -> giveaway.start());
     }
 }
