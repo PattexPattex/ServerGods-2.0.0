@@ -86,6 +86,7 @@ public class MuteManager {
         for (Mute mute : mutes.values()) {
             try {
                 mute.start();
+                log.info("Resumed mute with id \"{}\"", mute.id);
             }
             catch (IllegalThreadStateException e) {
                 log.warn("Mute \"" + mute.id + "\" already started", e);

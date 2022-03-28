@@ -74,6 +74,7 @@ public class GiveawayManager {
         for (Giveaway giveaway : giveaways.values()) {
             try {
                 giveaway.start();
+                log.info("Resumed giveaway with id \"{}\"", giveaway.id);
             }
             catch (IllegalThreadStateException e) {
                 log.warn("Giveaway \"" + giveaway.id + "\" already started", e);
