@@ -6,6 +6,7 @@ import com.pattexpattex.servergods2.core.config.GuildConfig;
 import com.pattexpattex.servergods2.core.config.GuildConfigManager;
 import com.pattexpattex.servergods2.core.giveaway.GiveawayManager;
 import com.pattexpattex.servergods2.core.listeners.*;
+import com.pattexpattex.servergods2.core.mute.MuteManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
@@ -33,6 +34,7 @@ public class Bot {
     private static Config config;
     private static GuildConfigManager guildConfigManager;
     private static GiveawayManager giveawayManager;
+    private static MuteManager muteManager;
     private static ScheduledExecutorService executors;
     private static EventWaiter waiter;
     private static JDA jda;
@@ -76,6 +78,7 @@ public class Bot {
         config = new Config();
         guildConfigManager = new GuildConfigManager();
         giveawayManager = new GiveawayManager();
+        muteManager = new MuteManager();
         debug = getConfig().enabledDebugInfo();
         String prefix = getConfig().getConfigValue("prefix");
 
@@ -149,6 +152,10 @@ public class Bot {
         return giveawayManager;
     }
 
+    public static MuteManager getMuteManager() {
+        return muteManager;
+    }
+
     public static Permission[] getRecommendedPermissions() {
         return permissions;
     }
@@ -163,5 +170,9 @@ public class Bot {
 
     public static boolean isDebugInRepliesEnabled() {
         return debug;
+    }
+
+    public static String getPrefix() {
+        return Bot.getConfig().getConfigValue("prefix");
     }
 }

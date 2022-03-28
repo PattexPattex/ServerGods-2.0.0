@@ -118,40 +118,28 @@ public class OtherUtil {
         }
     }
 
-    public static @Nullable User findUserById(long id) {
-
-        try {
-            return Bot.getJDA().retrieveUserById(id).complete();
-        }
-        catch (RuntimeException e) {
-            return null;
-        }
-    }
-
     /**
      * @implNote Tends to freeze for a couple of moments
      */
-    public static @Nullable Message findMessageById(long id) {
+    public static @Nullable Message findMessageById(long id, Guild guild) {
 
-        for (Guild guild : Bot.getJDA().getGuilds()) {
-            for (TextChannel channel : guild.getTextChannelCache()) {
-                try {
-                    return channel.retrieveMessageById(id).complete();
-                }
-                catch (RuntimeException ignored) {}
+        for (TextChannel channel : guild.getTextChannelCache()) {
+            try {
+                return channel.retrieveMessageById(id).complete();
             }
-            for (NewsChannel channel : guild.getNewsChannelCache()) {
-                try {
-                    return channel.retrieveMessageById(id).complete();
-                }
-                catch (RuntimeException ignored) {}
+            catch (RuntimeException ignored) {}
+        }
+        for (NewsChannel channel : guild.getNewsChannelCache()) {
+            try {
+                return channel.retrieveMessageById(id).complete();
             }
-            for (ThreadChannel channel : guild.getThreadChannelCache()) {
-                try {
-                    return channel.retrieveMessageById(id).complete();
-                }
-                catch (RuntimeException ignored) {}
+            catch (RuntimeException ignored) {}
+        }
+        for (ThreadChannel channel : guild.getThreadChannelCache()) {
+            try {
+                return channel.retrieveMessageById(id).complete();
             }
+            catch (RuntimeException ignored) {}
         }
 
         return null;

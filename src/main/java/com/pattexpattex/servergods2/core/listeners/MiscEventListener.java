@@ -1,7 +1,7 @@
 package com.pattexpattex.servergods2.core.listeners;
 
-import com.pattexpattex.servergods2.commands.slash.moderation.MuteCmd;
 import com.pattexpattex.servergods2.core.Bot;
+import com.pattexpattex.servergods2.core.mute.Mute;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
@@ -204,8 +204,9 @@ public class MiscEventListener extends ListenerAdapter {
 
         if (!roles.contains(Bot.getGuildConfig(guild).getMuted(guild))) return;
 
-        if (MuteCmd.mutes.containsKey(event.getMember().getIdLong())) {
-            MuteCmd.mutes.get(id).end();
+        Mute mute = Bot.getMuteManager().getMute(id);
+        if (mute != null) {
+            mute.end();
         }
     }
 
@@ -240,5 +241,6 @@ public class MiscEventListener extends ListenerAdapter {
     @Override
     public void onReady(@NotNull ReadyEvent event) {
         Bot.getGiveawayManager().resumeActiveGiveaways();
+        Bot.getMuteManager().resumeActiveMutes();
     }
 }

@@ -14,8 +14,8 @@ import java.util.Map;
 
 public class GiveawayManager {
 
-    private final String file = "cache\\giveaways.json";
-    private final Logger log = LoggerFactory.getLogger(GuildConfigManager.class);
+    private final static String file = "cache\\giveaways.json";
+    private final static Logger log = LoggerFactory.getLogger(GuildConfigManager.class);
     private final Map<Long, Giveaway> giveaways;
 
     public GiveawayManager() {
@@ -66,11 +66,19 @@ public class GiveawayManager {
             Files.write(OtherUtil.getPath(file), o.toString(4).getBytes());
         }
         catch (IOException e) {
-            log.warn("Failed to write to \"" + file + "\"", e);
+            log.warn("Failed writing to \"" + file + "\"", e);
         }
     }
 
     public void resumeActiveGiveaways() {
-        giveaways.forEach((id, giveaway) -> giveaway.start());
+        for (Giveaway giveaway : giveaways.values()) {
+            try {
+                giveaway.start();
+            }
+            catch (IllegalThreadStateException e) {
+                log.warn("Giveaway \"" + giveaway.id + "\" already started", e);
+
+            }
+        }
     }
 }

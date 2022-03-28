@@ -4,9 +4,7 @@ import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import com.pattexpattex.servergods2.util.OtherUtil;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +19,12 @@ public class Giveaway extends Thread {
     protected int winners;
     protected long end;
     protected boolean completed;
-    protected final long id, hostId;
+    protected final long id, hostId, guildId;
     protected final String reward;
 
     private String mention;
-    private User host;
+    private Member host;
+    private Guild guild;
     private Message message;
     private ScheduledFuture<?> future;
     private final long now;
@@ -33,20 +32,40 @@ public class Giveaway extends Thread {
 
     private static final Logger log = LoggerFactory.getLogger(Giveaway.class);
 
-    public Giveaway(GiveawayManager manager, long id, String reward, int winners, long end, long hostId) {
+    public Giveaway(GiveawayManager manager, long id, long hostId, long guildId, String reward, int winners, long end) {
         this.manager = manager;
         this.id = id;
+        this.hostId = hostId;
+        this.guildId = guildId;
         this.reward = reward;
         this.winners = winners;
-        this.hostId = hostId;
         this.now = Instant.now().getEpochSecond();
         this.end = end;
 
-        checkIsCompleted();
+        check();
     }
 
     protected Giveaway(GiveawayManager manager, JSONObject o) {
-        this(manager, o.getLong("id"), o.getString("reward"), o.getInt("winners"), o.getLong("end"), o.getLong("host_id"));
+        this(manager,
+                o.getLong("id"),
+                o.getLong("host"),
+                o.getLong("guild"),
+                o.getString("reward"),
+                (o.has("winners") ? o.getInt("winners") : 1),
+                o.getLong("end"));
+    }
+
+    protected JSONObject toJSON() {
+        JSONObject o = new JSONObject();
+
+        o.put("id", id);
+        o.put("host", hostId);
+        o.put("guild", guildId);
+        o.put("reward", reward);
+        if (winners != 1) o.put("winners", winners);
+        o.put("end", end);
+
+        return o;
     }
 
     @Override
@@ -60,8 +79,6 @@ public class Giveaway extends Thread {
         catch (RuntimeException e) {
             failed(e);
         }
-
-        //Bot.getExecutor().schedule(() -> end(false), end - now, TimeUnit.SECONDS);
 
         new Timer().schedule(new TimerTask() {
             @Override
@@ -166,18 +183,6 @@ public class Giveaway extends Thread {
         end(true);
     }
 
-    protected JSONObject toJSON() {
-        JSONObject o = new JSONObject();
-
-        o.put("id", id);
-        o.put("reward", reward);
-        o.put("winners", winners);
-        o.put("end", end);
-        o.put("host_id", hostId);
-
-        return o;
-    }
-
     private void failed(Throwable t) {
         manager.removeGiveaway(this);
         manager.writeGiveaways();
@@ -191,8 +196,12 @@ public class Giveaway extends Thread {
     }
 
     private void init() {
-        if (message == null) message = OtherUtil.findMessageById(id);
-        if (host == null) host = OtherUtil.findUserById(hostId);
+        if (guild == null) guild = Bot.getJDA().getGuildById(guildId);
+
+        if (guild == null) failed(new NullPointerException());
+
+        if (message == null) message = OtherUtil.findMessageById(id, guild);
+        if (host == null) host = guild.getMemberById(hostId);
 
         if (message == null || host == null) failed(new NullPointerException());
 
@@ -200,7 +209,7 @@ public class Giveaway extends Thread {
         mention = (role == null ? "@everyone": role.getAsMention());
     }
 
-    private void checkIsCompleted() {
+    private void check() {
         if (end < now) {
             completed = true;
 

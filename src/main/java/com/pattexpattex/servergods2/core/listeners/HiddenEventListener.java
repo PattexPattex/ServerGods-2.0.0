@@ -1,9 +1,6 @@
 package com.pattexpattex.servergods2.core.listeners;
 
-import com.pattexpattex.servergods2.commands.hidden.ClearCmd;
-import com.pattexpattex.servergods2.commands.hidden.GetCmd;
-import com.pattexpattex.servergods2.commands.hidden.StopCmd;
-import com.pattexpattex.servergods2.commands.hidden.TestCmd;
+import com.pattexpattex.servergods2.commands.hidden.*;
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotHidden;
 import com.pattexpattex.servergods2.util.FormatUtil;
@@ -42,6 +39,7 @@ public class HiddenEventListener extends ListenerAdapter {
         cmdList.put("clear", new ClearCmd());
         cmdList.put("get", new GetCmd());
         cmdList.put("test", new TestCmd());
+        cmdList.put("eval", new EvalCmd());
     }
 
     @Override
@@ -75,10 +73,6 @@ public class HiddenEventListener extends ListenerAdapter {
         }
         catch (Exception e) {
             event.getChannel().sendMessageEmbeds(FormatUtil.errorEmbed(e, this.getClass()).build()).queue();
-        }
-        finally {
-            //Deletes the command message if it was created in a guild
-            if (event.isFromGuild()) FormatUtil.delete(msg);
         }
     }
 }

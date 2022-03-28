@@ -9,7 +9,6 @@ import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -55,7 +54,7 @@ public class GiveawayCmd extends BotSlash {
                 {
                     msg.addReaction("\uD83C\uDF89").queue();
                     try {
-                        new Giveaway(Bot.getGiveawayManager(), msg.getIdLong(), reward, winners, end, host.getIdLong()).start();
+                        new Giveaway(Bot.getGiveawayManager(), msg.getIdLong(), host.getIdLong(), guild.getIdLong(), reward, winners, end).start();
                     }
                     catch (RuntimeException e) {
                         throw new BotException(e);
