@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.pattexpattex'
-version '2.1.0_pre4'
+version '2.1.0_pre5'
 
 repositories {
     mavenCentral()
@@ -30,8 +30,9 @@ dependencies {
     implementation "com.typesafe:config:1.4.2" //Typesafe config (dependency of JLyrics)
 
     /* Other */
-    implementation 'org.json:json:20211205' //org.json for config
+    implementation 'org.json:json:20220320' //org.json for config
     implementation "pw.chew:jda-chewtils:2.0-SNAPSHOT" //JDA-Utilities fork
+    implementation "ch.obermuhlner:java-scriptengine:2.0.0" //Java ScriptEngine for EvalCmd
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2' //JUnit
     testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'

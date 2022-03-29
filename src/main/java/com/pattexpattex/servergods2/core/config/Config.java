@@ -39,7 +39,7 @@ public class Config {
                     //Write the default to the file
                     Files.write(OtherUtil.getPath(filename), defaultConf.toString(4).getBytes());
 
-                    log.info("Created default config file, now you must fill it out");
+                    log.info("Created new config file, please fill it out");
                 }
                 //Oops
                 catch (IOException e) {
@@ -55,7 +55,7 @@ public class Config {
             }
         }
         //Oops
-        catch (Exception e) {
+        catch (IOException e) {
             log.error("Something is broken with the config", e);
             System.exit(-1);
         }
@@ -71,10 +71,10 @@ public class Config {
         }
 
         //No results
-        else throw new IllegalArgumentException("The key \"" + key + "\" is missing");
+        else throw new IllegalArgumentException("Config value \"" + key + "\" is missing, please fix");
     }
 
-    public boolean isCmdEnabled(String key) throws IllegalArgumentException {
+    public boolean isCmdEnabled(String key) {
 
         //Commands config block
         JSONObject cmds = config.getJSONObject("commands");
@@ -83,7 +83,10 @@ public class Config {
         if (cmds.has(key)) return cmds.getBoolean(key);
 
         //No results
-        else throw new IllegalArgumentException("The key \"" + key + "\" is missing");
+        else {
+            log.warn("Config value \"{}\" is missing, please fix", key);
+            return false;
+        }
     }
 
     public Activity getActivity() throws IllegalArgumentException {
@@ -127,6 +130,10 @@ public class Config {
         }
     }
 
+    public boolean getEval() {
+        return config.getBoolean("eval");
+    }
+
     public String getLyricsProvider() {
 
         String provider = config.getString("lyrics_provider");
@@ -136,7 +143,7 @@ public class Config {
                 return provider;
             }
             default -> {
-                log.warn("Broken config value \"lyrics_provider\", defaulting to \"A-Z Lyrics\"");
+                log.warn("Broken config value \"lyrics_provider\", please fix");
                 return "A-Z Lyrics";
             }
         }

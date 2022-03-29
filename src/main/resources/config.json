@@ -11,6 +11,7 @@
   "debug_info_in_messages": false,
   "spotify_app_id": "",
   "spotify_app_secret": "",
+  "eval": false,
 
   "commands": {
     "config": true,
