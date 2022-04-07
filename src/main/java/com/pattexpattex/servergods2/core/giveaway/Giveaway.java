@@ -5,12 +5,14 @@ import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import com.pattexpattex.servergods2.util.OtherUtil;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -27,19 +29,19 @@ public class Giveaway extends Thread {
     private Guild guild;
     private Message message;
     private ScheduledFuture<?> future;
-    private final long now;
     private final GiveawayManager manager;
 
     private static final Logger log = LoggerFactory.getLogger(Giveaway.class);
 
     public Giveaway(GiveawayManager manager, long id, long hostId, long guildId, String reward, int winners, long end) {
+        this.setName("GiveawayThread-" + id);
+
         this.manager = manager;
         this.id = id;
         this.hostId = hostId;
         this.guildId = guildId;
         this.reward = reward;
         this.winners = winners;
-        this.now = Instant.now().getEpochSecond();
         this.end = end;
 
         check();
@@ -70,7 +72,10 @@ public class Giveaway extends Thread {
 
     @Override
     public void run() {
+        if (completed) return;
         init();
+
+        log.info("Starting giveaway with id {}", id);
 
         try {
             message.editMessage(mention + "\n\n\uD83C\uDF89 **GIVEAWAY** \uD83C\uDF89").complete();
@@ -80,17 +85,18 @@ public class Giveaway extends Thread {
             failed(e);
         }
 
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
-                end(false);
-            }
-        }, Date.from(Instant.ofEpochSecond(end)));
+        log.info("Scheduled giveaway with id {} to end at {} (in {} seconds)", id, end, end - OtherUtil.epoch());
+        Bot.getExecutor().schedule(() -> {
+            end(false);
+        }, end - OtherUtil.epoch(), TimeUnit.SECONDS);
     }
 
     public void end(boolean reroll) {
         if (completed) return;
         init();
+
+        if (reroll) log.info("Rerolling giveaway with id {}", id);
+        else log.info("Ending giveaway with id {}", id);
 
         try {
             message = message.getChannel().retrieveMessageById(id).complete();
@@ -117,27 +123,34 @@ public class Giveaway extends Thread {
 
                 winnersList.forEach((user) -> sb.append(user.getAsMention()).append(" "));
 
-                message.getChannel().sendMessage(BotEmoji.MENTION + sb).complete().editMessageComponents(FormatUtil.jumpButton(message)).queue();
+                MessageAction temp = message.getChannel()
+                        .sendMessage(BotEmoji.MENTION + sb + "\n" + BotEmoji.MENTION + host.getAsMention())
+                        .setActionRows(FormatUtil.jumpButton(message));
 
                 if (reroll) {
-                    message.getChannel().sendMessageEmbeds(FormatUtil.rerollGiveawayEmbed(sb.toString(), host, reward).build()).queue();
+                    temp.setEmbeds(FormatUtil.rerollGiveawayEmbed(id, sb.toString(), host, reward).build()).queue();
                 }
                 else {
-                    message.editMessage("\uD83C\uDF89 **GIVEAWAY ENDED** \uD83C\uDF89").queue();
-                    message.editMessageEmbeds(FormatUtil.endedGiveawayEmbed(sb.toString(), host, reward).build()).queue();
+                    message.editMessage("\uD83C\uDF89 **GIVEAWAY ENDED** \uD83C\uDF89")
+                            .setEmbeds(FormatUtil.endedGiveawayEmbed(id, sb.toString(), host, reward).build()).queue();
+
+                    temp.setEmbeds(FormatUtil.endedGiveawayEmbed(id, sb.toString(), host, reward).build()).queue();
                 }
 
             }
             else {
-                message.getChannel().sendMessage(BotEmoji.MENTION + host.getAsMention() + "\n" + BotEmoji.MENTION + mention).complete()
-                        .editMessageComponents(FormatUtil.jumpButton(message)).queue();
+                MessageAction temp = message.getChannel()
+                        .sendMessage(BotEmoji.MENTION + mention + "\n" + BotEmoji.MENTION + host.getAsMention())
+                        .setActionRows(FormatUtil.jumpButton(message));
 
                 if (reroll) {
-                    message.getChannel().sendMessageEmbeds(FormatUtil.noWinnersGiveawayEmbed(reward).build()).queue();
+                    temp.setEmbeds(FormatUtil.noWinnersGiveawayEmbed(id, reward).build()).queue();
                 }
                 else {
-                    message.editMessage("\uD83C\uDF89 **GIVEAWAY ENDED** \uD83C\uDF89").queue();
-                    message.editMessageEmbeds(FormatUtil.noWinnersGiveawayEmbed(reward).build()).queue();
+                    message.editMessage("\uD83C\uDF89 **GIVEAWAY ENDED** \uD83C\uDF89")
+                            .setEmbeds(FormatUtil.noWinnersGiveawayEmbed(id, reward).build()).queue();
+
+                    temp.setEmbeds(FormatUtil.noWinnersGiveawayEmbed(id, reward).build()).queue();
                 }
             }
         });
@@ -146,13 +159,18 @@ public class Giveaway extends Thread {
 
         if (future != null) future.cancel(false);
 
+        log.info("Scheduling to delete giveaway with id {} from cache in 24hrs", id);
+
         future = Bot.getExecutor().schedule(() -> {
+            log.info("Deleted giveaway with id {} from cache", id);
             manager.removeGiveaway(this);
             manager.writeGiveaways();
         }, 24, TimeUnit.HOURS);
     }
 
     public void cancel() {
+        log.info("Cancelling giveaway with id {}", id);
+
         manager.removeGiveaway(this);
         manager.writeGiveaways();
         if (future != null) future.cancel(false);
@@ -184,36 +202,40 @@ public class Giveaway extends Thread {
     }
 
     private void failed(Throwable t) {
+        log.warn("Giveaway with id {} failed", id, t);
+
+        if (future != null) future.cancel(false);
+        log.info("Deleted giveaway with id {} from cache", id);
         manager.removeGiveaway(this);
         manager.writeGiveaways();
-        if (future != null) future.cancel(false);
 
         if (completed) return;
 
         completed = true;
-
-        log.warn("Giveaway with id \"" + id + "\" failed", t);
     }
 
     private void init() {
         if (guild == null) guild = Bot.getJDA().getGuildById(guildId);
 
-        if (guild == null) failed(new NullPointerException());
+        if (guild == null) failed(new NullPointerException("guild is null"));
 
         if (message == null) message = OtherUtil.findMessageById(id, guild);
         if (host == null) host = guild.getMemberById(hostId);
 
-        if (message == null || host == null) failed(new NullPointerException());
+        if (message == null || host == null) failed(new NullPointerException("message / host is null"));
 
         Role role = Bot.getGuildConfig(message.getGuild()).getGiveaway(message.getGuild());
         mention = (role == null ? "@everyone": role.getAsMention());
     }
 
     private void check() {
-        if (end < now) {
+        if (end < OtherUtil.epoch()) {
             completed = true;
 
+            log.info("Giveaway with id {} finished, scheduling to delete from cache in 24hrs", id);
+
             future = Bot.getExecutor().schedule(() -> {
+                log.info("Deleted giveaway with id {} from cache", id);
                 manager.removeGiveaway(this);
                 manager.writeGiveaways();
             }, 24, TimeUnit.HOURS);
@@ -224,5 +246,33 @@ public class Giveaway extends Thread {
             manager.addGiveaway(this);
             manager.writeGiveaways();
         }
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public long getEnd() {
+        return end;
+    }
+
+    public int getWinners() {
+        return winners;
+    }
+
+    public Member getHost() {
+        return host;
+    }
+
+    public long getGiveawayId() {
+        return id;
+    }
+
+    public String getReward() {
+        return reward;
+    }
+
+    public Guild getGuild() {
+        return guild;
     }
 }

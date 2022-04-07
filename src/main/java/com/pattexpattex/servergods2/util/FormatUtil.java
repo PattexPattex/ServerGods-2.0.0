@@ -448,21 +448,28 @@ public class FormatUtil {
                 reward);
     }
 
-    public static EmbedBuilder endedGiveawayEmbed(String winners, Member host, String reward) {
+    public static EmbedBuilder endedGiveawayEmbed(long id, String winners, Member host, String reward) {
         return defaultEmbed(
                 "\uD83C\uDF7E Winners: " + winners + "\n" +
-                        BotEmoji.MENTION + " DM " + host.getAsMention() + " to claim the reward!",
+                        BotEmoji.MENTION + " DM " + host.getAsMention() + " to claim the reward!\n\n" +
+                        "_Reroll available until " + epochTimestamp(OtherUtil.epoch() + (24 * 60 * 60)) + "_\n" +
+                        "_Reroll with `/giveaway reroll message-id:" + id + "`_",
                 reward);
     }
 
-    public static EmbedBuilder noWinnersGiveawayEmbed(String reward) {
-        return defaultEmbed("\u2753 Winners: no one\n*`Waiting for re-roll...`*", reward);
+    public static EmbedBuilder noWinnersGiveawayEmbed(long id, String reward) {
+        return defaultEmbed(
+                "\u2753 No winners!\n\n" +
+                        "_Reroll available until " + epochTimestamp(OtherUtil.epoch() + (24 * 60 * 60)) + "_\n" +
+                        "_Reroll with `/giveaway reroll message-id:" + id + "`_", reward);
     }
 
-    public static EmbedBuilder rerollGiveawayEmbed(String winners, Member host, String reward) {
+    public static EmbedBuilder rerollGiveawayEmbed(long id, String winners, Member host, String reward) {
         return defaultEmbed(
                 "\uD83C\uDF7E Re-roll winners: " + winners + "\n" +
-                        BotEmoji.MENTION + " DM " + host.getAsMention() + " to claim the reward!",
+                        BotEmoji.MENTION + " DM " + host.getAsMention() + " to claim the reward!\n\n" +
+                        "_Reroll available until " + epochTimestamp(OtherUtil.epoch() + (24 * 60 * 60)) + "_\n" +
+                        "_Reroll with `/giveaway reroll message-id:" + id + "`_",
                 reward);
     }
 

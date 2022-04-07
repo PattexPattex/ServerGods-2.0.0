@@ -8,7 +8,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
 public class Mute extends Thread {
@@ -25,6 +24,8 @@ public class Mute extends Thread {
     private static final Logger log = LoggerFactory.getLogger(Mute.class);
 
     public Mute(MuteManager manager, long id, long moderator, long guildId, long start, long end, String reason) {
+        this.setName("MuteThread-" + id);
+
         this.manager = manager;
 
         this.id = id;
@@ -52,6 +53,7 @@ public class Mute extends Thread {
 
     @Override
     public void run() {
+        log.info("Starting mute with id {}", id);
         init();
 
         guild.addRoleToMember(member, role).reason("Mute: " + reason).queue(null, this::failed);
@@ -59,7 +61,8 @@ public class Mute extends Thread {
         if (infinite) return;
 
         try {
-            guild.removeRoleFromMember(member, role).reason("Mute ended").completeAfter(end - Instant.now().getEpochSecond(), TimeUnit.SECONDS);
+            log.info("Scheduled mute with id {} to end at {} (in {} seconds)", id, end, end - System.currentTimeMillis());
+            guild.removeRoleFromMember(member, role).reason("Mute ended").completeAfter(end - System.currentTimeMillis(), TimeUnit.SECONDS);
         }
         catch (RuntimeException ok) {
             guild.removeRoleFromMember(member, role).reason("Mute ended").queue();
@@ -71,6 +74,7 @@ public class Mute extends Thread {
     }
 
     public void end() {
+        log.info("Ending mute with id {}", id);
         init();
 
         if (infinite) {
@@ -99,7 +103,7 @@ public class Mute extends Thread {
         manager.removeMute(this);
         manager.writeMutes();
 
-        log.warn("Mute with id \"" + id + "\" failed", t);
+        log.warn("Mute with id {} failed", id, t);
     }
 
     private void init() {

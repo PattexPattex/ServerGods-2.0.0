@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GiveawayManager {
@@ -33,6 +34,17 @@ public class GiveawayManager {
         catch (Exception e) {
             log.warn("Failed reading from \"" + file + "\"", e);
         }
+    }
+
+    public Map<Long, Giveaway> getGiveaways(long guildId) {
+        List<Map.Entry<Long, Giveaway>> list = giveaways.entrySet().stream().filter((Map.Entry<Long, Giveaway> entry) -> entry.getValue().guildId == guildId).toList();
+        Map<Long, Giveaway> map = new HashMap<>();
+
+        list.forEach((Map.Entry<Long, Giveaway> entry) -> {
+            map.put(entry.getKey(), entry.getValue());
+        });
+
+        return map;
     }
 
     public @Nullable Giveaway getGiveaway(long id) {
@@ -74,10 +86,10 @@ public class GiveawayManager {
         for (Giveaway giveaway : giveaways.values()) {
             try {
                 giveaway.start();
-                log.info("Resumed giveaway with id \"{}\"", giveaway.id);
+                //log.info("Resumed giveaway with id {}", giveaway.id);
             }
             catch (IllegalThreadStateException e) {
-                log.warn("Giveaway \"" + giveaway.id + "\" already started", e);
+                log.warn("Giveaway with id {} already started", giveaway.id, e);
 
             }
         }

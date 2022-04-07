@@ -7,6 +7,7 @@ import com.pattexpattex.servergods2.core.giveaway.Giveaway;
 import com.pattexpattex.servergods2.core.giveaway.GiveawayManager;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
@@ -17,6 +18,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Objects;
 
 public class GiveawayCmd extends BotSlash {
@@ -114,6 +116,53 @@ public class GiveawayCmd extends BotSlash {
 
                 event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Cancelled the giveaway").build()).queue();
             }
+            case "giveaway/active" -> {
+                long messageId = event.getOption("message-id") != null ? Objects.requireNonNull(event.getOption("message-id")).getAsLong() : -1;
+
+                if (messageId == -1) {
+                    Map<Long, Giveaway> giveaways = Bot.getGiveawayManager().getGiveaways(guild.getIdLong());
+
+                    if (giveaways.isEmpty()) throw new BotException("No active giveaways");
+
+                    EmbedBuilder builder = FormatUtil.defaultEmbed(null, "Active Giveaways");
+                    int i = 0;
+
+                    for (Giveaway giveaway : giveaways.values()) {
+                        i++;
+
+                        builder.appendDescription(String.format(
+                                "**%d.** **%s** (%d winners) by %s, %s, id: _`%d`_",
+                                i,
+                                giveaway.getReward(),
+                                giveaway.getWinners(),
+                                giveaway.getHost().getAsMention(),
+                                (giveaway.isCompleted() ? "ended on " : "ends on ") + FormatUtil.epochTimestamp(giveaway.getEnd()),
+                                giveaway.getGiveawayId()
+                        ));
+                    }
+
+                    event.getHook().editOriginalEmbeds(builder.build()).queue();
+                }
+                else {
+                    Giveaway giveaway = Bot.getGiveawayManager().getGiveaway(messageId);
+
+                    if (giveaway == null) {
+                        throw new BotException("No giveaway with id " + messageId);
+                    }
+
+                    EmbedBuilder builder = FormatUtil.defaultEmbed(null, giveaway.getReward());
+
+                    builder.appendDescription(String.format(
+                            "%d winners\nBy %s\n%s\nId: _`%d`_",
+                            giveaway.getWinners(),
+                            giveaway.getHost().getAsMention(),
+                            (giveaway.isCompleted() ? "ended on " : "ends on ") + FormatUtil.epochTimestamp(giveaway.getEnd()),
+                            giveaway.getGiveawayId()
+                    ));
+
+                    event.getHook().editOriginalEmbeds(builder.build()).queue();
+                }
+            }
         }
     }
 
@@ -141,7 +190,9 @@ public class GiveawayCmd extends BotSlash {
                 new SubcommandData("end", "End a giveaway now")
                         .addOption(OptionType.STRING, "message-id", "Message ID of the giveaway to end", true),
                 new SubcommandData("cancel", "Cancel a giveaway")
-                        .addOption(OptionType.STRING, "message-id", "Message ID of the giveaway to cancel", true)
+                        .addOption(OptionType.STRING, "message-id", "Message ID of the giveaway to cancel", true),
+                new SubcommandData("active", "Retrieve active giveaways")
+                        .addOption(OptionType.STRING, "message-id", "Retrieve info only for a giveaway with the given ID", false)
         };
     }
 

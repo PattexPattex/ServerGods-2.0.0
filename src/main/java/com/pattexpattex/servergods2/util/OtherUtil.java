@@ -14,6 +14,7 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Objects;
 
 public class OtherUtil {
@@ -143,5 +144,9 @@ public class OtherUtil {
         }
 
         return null;
+    }
+
+    public static long epoch() {
+        return Instant.now().getEpochSecond();
     }
 }
