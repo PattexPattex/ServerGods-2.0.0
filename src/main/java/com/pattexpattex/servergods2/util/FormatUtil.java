@@ -1,8 +1,9 @@
 package com.pattexpattex.servergods2.util;
 
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.BotException;
-import com.pattexpattex.servergods2.core.Kvintakord;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
+import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
+import com.pattexpattex.servergods2.core.kvintakord.TrackMetadata;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -31,7 +32,7 @@ public class FormatUtil {
     private static final String avatarUrl = Bot.getJDA().getSelfUser().getEffectiveAvatarUrl();
     private static final String kvintakordAvatar = "https://raw.githubusercontent.com/PattexPattex/ServerGods/master/musicGods.png";
 
-    public static final Color COLOR = new Color((int) Long.parseLong(Bot.getConfig().getConfigValue("color"), 16));
+    public static final Color COLOR = new Color((int) Long.parseLong(Bot.getConfig().getValue("color"), 16));
     public static final Color ERR_COLOR = new Color(0xFF2626);
     public static final Color KVINTAKORD_COLOR = new Color(0xDFE393);
 
@@ -163,12 +164,8 @@ public class FormatUtil {
 
     /* ---- Delete Message ---- */
 
-    public static void delete(@NotNull Message message) {
-        message.delete().queue();
-    }
-
     public static void deleteAfter(@NotNull Message message, int seconds) {
-        message.delete().queueAfter(Long.parseLong(String.valueOf(seconds)), TimeUnit.SECONDS);
+        message.delete().queueAfter(seconds, TimeUnit.SECONDS);
     }
 
 
@@ -373,7 +370,7 @@ public class FormatUtil {
     /* ---- Kvintakord ---- */
 
     public static @NotNull String formatTrackLink(@NotNull AudioTrack track) {
-        return "[" + Kvintakord.getTrackName(track) + "](" + Kvintakord.getTrackUri(track) + ")";
+        return "[" + TrackMetadata.getTrackName(track) + "](" + TrackMetadata.getTrackUri(track) + ")";
     }
 
     public static String getLyricsProviderUrl() {
@@ -392,8 +389,8 @@ public class FormatUtil {
 
     @Contract("null -> fail")
     public static @NotNull MessageEmbed getQueueEmbed(Guild guild) {
-        List<AudioTrack> queue = Kvintakord.getQueue(guild);
-        AudioTrack currentTrack = Objects.requireNonNull(Kvintakord.getCurrentTrack(guild));
+        List<AudioTrack> queue = Bot.getKvintakord().getQueue(guild);
+        AudioTrack currentTrack = Objects.requireNonNull(Bot.getKvintakord().getCurrentTrack(guild));
 
         StringBuilder sb = new StringBuilder();
 
@@ -404,7 +401,7 @@ public class FormatUtil {
             sb.append("\uD83D\uDD34").append(" **`").append(formatTime(currentTrack.getDuration())).append("`**");
         }
 
-        if (Kvintakord.isPaused(guild)) {
+        if (Bot.getKvintakord().isPaused(guild)) {
             sb.append(" **| \u23F8**");
         }
 
@@ -415,7 +412,7 @@ public class FormatUtil {
             sb.append(" **| \uD83D\uDD01**");
         }
 
-        sb.append(" **| \uD83D\uDD0A `").append(Kvintakord.getVolume(guild)).append("`**");
+        sb.append(" **| \uD83D\uDD0A `").append(Bot.getKvintakord().getVolume(guild)).append("`**");
 
         sb.append("\n\n");
 
@@ -427,9 +424,9 @@ public class FormatUtil {
         }
 
         return FormatUtil.kvintakordEmbed(sb.toString())
-                .setTitle(Kvintakord.getTrackName(currentTrack), (!currentTrack.getIdentifier().startsWith("C:\\") ? Kvintakord.getTrackUri(currentTrack) : null))
-                .setAuthor(Kvintakord.getTrackAuthor(currentTrack), Kvintakord.getTrackAuthorUrl(currentTrack))
-                .setThumbnail(Kvintakord.getTrackImage(currentTrack))
+                .setTitle(TrackMetadata.getTrackName(currentTrack), (!currentTrack.getIdentifier().startsWith("C:\\") ? TrackMetadata.getTrackUri(currentTrack) : null))
+                .setAuthor(TrackMetadata.getTrackAuthor(currentTrack), TrackMetadata.getTrackAuthorUrl(currentTrack))
+                .setThumbnail(TrackMetadata.getTrackImage(currentTrack))
                 .build();
     }
 

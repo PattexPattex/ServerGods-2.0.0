@@ -68,12 +68,12 @@ public class EvalCmd extends BotHidden {
     }
 
     public EvalCmd() {
-        if (!Bot.getConfig().getEval()) throw new UnsupportedOperationException("Eval is not enabled");
+        if (!Bot.getConfig().enabledEval()) throw new UnsupportedOperationException("Eval is not enabled");
     }
 
     @Override
     public void run(@NotNull MessageReceivedEvent event, @NotNull String[] args) throws Exception {
-        if (!Bot.getConfig().getEval()) throw new UnsupportedOperationException("Eval is not enabled");
+        if (!Bot.getConfig().enabledEval()) throw new UnsupportedOperationException("Eval is not enabled");
 
         engine = new ScriptEngineManager().getEngineByName("java");
 
@@ -116,7 +116,7 @@ public class EvalCmd extends BotHidden {
 
     private void eval(MessageReceivedEvent event, String script) {
         //Another failsafe
-        if (!Bot.getConfig().getEval()) throw new UnsupportedOperationException("Eval is not enabled");
+        if (!Bot.getConfig().enabledEval()) throw new UnsupportedOperationException("Eval is not enabled");
 
         long startTime = System.currentTimeMillis();
 

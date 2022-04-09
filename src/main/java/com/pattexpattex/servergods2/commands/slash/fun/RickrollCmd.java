@@ -1,9 +1,9 @@
 package com.pattexpattex.servergods2.commands.slash.fun;
 
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.BotException;
-import com.pattexpattex.servergods2.core.Kvintakord;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
+import com.pattexpattex.servergods2.core.kvintakord.discord.KvintakordDiscordManager;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.AudioChannel;
@@ -35,7 +35,7 @@ public class RickrollCmd extends BotSlash {
                     throw new BotException("The user is not connected to a voice channel");
                 }
 
-                Kvintakord.loadAndPlay(audioChannel, "https://www.youtube.com/watch?v=dQw4w9WgXcQ", true);
+                Bot.getKvintakord().loadAndPlay(audioChannel, "https://www.youtube.com/watch?v=dQw4w9WgXcQ", true);
 
                 if (member == event.getMember()) {
                     event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Rickrolled " + audioChannel.getAsMention()).build()).queue(null, this::rethrow);
@@ -44,16 +44,16 @@ public class RickrollCmd extends BotSlash {
                     event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Rickrolled " + member.getAsMention() + " in " + audioChannel.getAsMention()).build()).queue(null, this::rethrow);
                 }
 
-                Bot.getExecutor().schedule(() -> Kvintakord.skipToTrack(0, guild), 62, TimeUnit.SECONDS);
+                Bot.getScheduledExecutor().schedule(() -> Bot.getKvintakord().skipToTrack(0, guild), 62, TimeUnit.SECONDS);
             }
             case "rickroll/stop" -> {
-                if (Kvintakord.currentVoiceChannel(guild) == null) {
+                if (KvintakordDiscordManager.currentVoiceChannel(guild) == null) {
                     throw new BotException("I am not connected to any voice channel");
                 }
                 else {
-                    AudioChannel channel = Objects.requireNonNull(Kvintakord.currentVoiceChannel(guild));
+                    AudioChannel channel = Objects.requireNonNull(KvintakordDiscordManager.currentVoiceChannel(guild));
 
-                    Kvintakord.skipToTrack(0, guild);
+                    Bot.getKvintakord().skipToTrack(0, guild);
 
                     event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Disconnected from " + channel.getAsMention()).build()).queue(null, this::rethrow);
                 }

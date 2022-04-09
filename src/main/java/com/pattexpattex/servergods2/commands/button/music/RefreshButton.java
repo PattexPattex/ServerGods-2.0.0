@@ -1,7 +1,8 @@
 package com.pattexpattex.servergods2.commands.button.music;
 
-import com.pattexpattex.servergods2.core.Kvintakord;
+import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotButton;
+import com.pattexpattex.servergods2.core.kvintakord.discord.KvintakordDiscordManager;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.Guild;
@@ -22,7 +23,7 @@ public class RefreshButton extends BotButton {
 
         event.deferEdit().queue();
 
-        if (!Kvintakord.updateLastQueueMessage(guild, event) || !Kvintakord.isPlaying(guild)) {
+        if (!KvintakordDiscordManager.updateLastQueueMessage(guild, event) || !Bot.getKvintakord().isPlaying(guild)) {
             event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).complete()
                     .editMessageComponents(Collections.emptyList()).queue();
         }

@@ -1,7 +1,7 @@
 package com.pattexpattex.servergods2.commands.slash.config;
 
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.BotException;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
 import com.pattexpattex.servergods2.core.listeners.SlashEventListener;
 import com.pattexpattex.servergods2.util.BotEmoji;

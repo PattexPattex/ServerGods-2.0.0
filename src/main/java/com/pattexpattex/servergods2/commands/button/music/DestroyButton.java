@@ -1,7 +1,7 @@
 package com.pattexpattex.servergods2.commands.button.music;
 
-import com.pattexpattex.servergods2.core.Kvintakord;
 import com.pattexpattex.servergods2.core.commands.BotButton;
+import com.pattexpattex.servergods2.core.kvintakord.discord.KvintakordDiscordManager;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.Guild;
@@ -22,7 +22,7 @@ public class DestroyButton extends BotButton {
 
         Guild guild = Objects.requireNonNull(event.getGuild());
 
-        Kvintakord.removeLastQueueMessage(guild);
+        KvintakordDiscordManager.removeLastQueueMessage(guild);
 
         event.getHook().editOriginalComponents(Collections.emptyList()).complete()
                 .editMessageEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).queue();

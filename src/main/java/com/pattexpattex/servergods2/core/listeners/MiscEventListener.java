@@ -1,6 +1,8 @@
 package com.pattexpattex.servergods2.core.listeners;
 
 import com.pattexpattex.servergods2.core.Bot;
+import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
+import com.pattexpattex.servergods2.core.kvintakord.discord.AloneInVoiceHandler;
 import com.pattexpattex.servergods2.core.mute.Mute;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -12,6 +14,8 @@ import net.dv8tion.jda.api.events.guild.invite.GuildInviteDeleteEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRoleRemoveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceGuildDeafenEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.role.RoleDeleteEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -242,5 +246,15 @@ public class MiscEventListener extends ListenerAdapter {
     public void onReady(@NotNull ReadyEvent event) {
         Bot.getGiveawayManager().resumeActiveGiveaways();
         Bot.getMuteManager().resumeActiveMutes();
+    }
+
+    @Override public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event) {
+        if (event.getMember() == event.getGuild().getSelfMember()) {
+            Bot.getKvintakord().stop(event.getGuild());
+        }
+    }
+
+    @Override public void onGuildVoiceUpdate(@NotNull GuildVoiceUpdateEvent event) {
+        Bot.getKvintakord().getAloneInVoiceHandler().onVoiceUpdate(event);
     }
 }

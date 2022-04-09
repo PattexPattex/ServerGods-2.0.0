@@ -1,7 +1,8 @@
 package com.pattexpattex.servergods2.commands.button.music;
 
-import com.pattexpattex.servergods2.core.Kvintakord;
+import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotButton;
+import com.pattexpattex.servergods2.core.kvintakord.discord.KvintakordDiscordManager;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.Emoji;
@@ -18,19 +19,19 @@ public class StopButton extends BotButton {
 
     @Override
     public void run(@NotNull ButtonClickEvent event) {
-        Kvintakord.checkAllConditions(Objects.requireNonNull(event.getMember()));
+        KvintakordDiscordManager.checkAllConditions(Objects.requireNonNull(event.getMember()));
 
         Guild guild = Objects.requireNonNull(event.getGuild());
 
         event.deferEdit().queue();
 
-        if (Kvintakord.isNotLastQueueMessage(guild, event.getMessage()) || !Kvintakord.isPlaying(guild)) {
+        if (KvintakordDiscordManager.isNotLastQueueMessage(guild, event.getMessage()) || !Bot.getKvintakord().isPlaying(guild)) {
             event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).complete()
                     .editMessageComponents(Collections.emptyList()).queue();
             return;
         }
 
-        Kvintakord.stop(guild);
+        Bot.getKvintakord().stop(guild);
     }
 
     @Override

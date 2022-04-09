@@ -146,7 +146,7 @@ public class Giveaway extends Thread {
 
         if (future != null) future.cancel(false);
 
-        future = Bot.getExecutor().schedule(() -> {
+        future = Bot.getScheduledExecutor().schedule(() -> {
             manager.removeGiveaway(this);
             manager.writeGiveaways();
         }, 24, TimeUnit.HOURS);
@@ -213,7 +213,7 @@ public class Giveaway extends Thread {
         if (end < now) {
             completed = true;
 
-            future = Bot.getExecutor().schedule(() -> {
+            future = Bot.getScheduledExecutor().schedule(() -> {
                 manager.removeGiveaway(this);
                 manager.writeGiveaways();
             }, 24, TimeUnit.HOURS);

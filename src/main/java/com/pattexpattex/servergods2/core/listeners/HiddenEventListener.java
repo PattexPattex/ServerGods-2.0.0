@@ -41,7 +41,7 @@ public class HiddenEventListener extends ListenerAdapter {
         cmdList.put("test", new TestCmd());
 
         //Eval command
-        if (Bot.getConfig().getEval()) cmdList.put("eval", new EvalCmd());
+        if (Bot.getConfig().enabledEval()) cmdList.put("eval", new EvalCmd());
     }
 
     @Override
@@ -60,7 +60,7 @@ public class HiddenEventListener extends ListenerAdapter {
         String[] split = SPACE_PATTERN.split(msgWithoutPrefix);
         String cmdName = split[0];
         BotHidden cmd = cmdList.get(cmdName);
-        String owner = Bot.getConfig().getConfigValue("bot_owner");
+        String owner = Bot.getConfig().getValue("bot_owner");
 
         //Some more checks
         if (cmd == null) return;

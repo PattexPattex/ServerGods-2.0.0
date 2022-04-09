@@ -14,6 +14,7 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Objects;
 
 public class OtherUtil {
@@ -37,9 +38,9 @@ public class OtherUtil {
         return result;
     }
 
-    public static @Nullable String loadResource(Object clazz, String name) {
+    public static @Nullable String loadResource(Class<?> clazz, String name) {
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(clazz.getClass().getResourceAsStream(name))))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(clazz.getResourceAsStream(name))))) {
 
             StringBuilder sb = new StringBuilder();
 
@@ -143,5 +144,9 @@ public class OtherUtil {
         }
 
         return null;
+    }
+
+    public static long epoch() {
+        return Instant.now().getEpochSecond();
     }
 }

@@ -4,9 +4,13 @@ import com.jagrosh.jdautilities.menu.OrderedMenu;
 import com.jagrosh.jlyrics.Lyrics;
 import com.pattexpattex.servergods2.commands.button.music.*;
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.BotException;
-import com.pattexpattex.servergods2.core.Kvintakord;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
+import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
+import com.pattexpattex.servergods2.core.kvintakord.TrackMetadata;
+import com.pattexpattex.servergods2.core.kvintakord.discord.KvintakordDiscordManager;
+import com.pattexpattex.servergods2.core.kvintakord.listener.AudioEventDispatcher;
+import com.pattexpattex.servergods2.core.kvintakord.listener.AudioEventListener;
 import com.pattexpattex.servergods2.core.listeners.SlashEventListener;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
@@ -36,11 +40,13 @@ public class MusicCmd extends BotSlash {
     @Override
     public void run(@NotNull SlashCommandEvent event) throws Exception {
 
+        Kvintakord kvintakord = Bot.getKvintakord();
+
         String subcommand = event.getCommandPath();
         Member member = event.getMember();
         Guild guild = Objects.requireNonNull(event.getGuild());
 
-        Kvintakord.registerAudioEventListener(guild, new Listener(event));
+        AudioEventDispatcher.registerAudioEventListener(guild, new Listener(event));
 
         Checks.notNull(guild, "Guild");
         Checks.notNull(member, "Member");
@@ -60,10 +66,10 @@ public class MusicCmd extends BotSlash {
                 if (!state.inAudioChannel()) throw new BotException("You are not connected to a voice channel");
                 if (state.isSelfDeafened()) throw new BotException("Un-deafen yourself to control music");
 
-                Kvintakord.removeLastTrackQueuedMessage(guild);
+                KvintakordDiscordManager.removeLastTrackQueuedMessage(guild);
 
                 try {
-                    Kvintakord.loadAndPlay(Objects.requireNonNull(state.getChannel()), query, playFirst);
+                    kvintakord.loadAndPlay(Objects.requireNonNull(state.getChannel()), query, playFirst);
                 }
                 catch (Exception e) {
                     throw new BotException(e);
@@ -72,71 +78,71 @@ public class MusicCmd extends BotSlash {
                 event.getHook().editOriginal(BotEmoji.YES).queue();
             }
             case "music/stop" -> {
-                Kvintakord.checkAllConditions(member);
+                KvintakordDiscordManager.checkAllConditions(member);
 
-                Kvintakord.stop(guild);
+                kvintakord.stop(guild);
 
                 event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Stopped and cleared the queue").build()).queue();
             }
             case "music/pause", "music/resume" -> {
-                Kvintakord.checkAllConditions(member);
+                KvintakordDiscordManager.checkAllConditions(member);
 
-                if (Kvintakord.pause(guild)) {
-                    event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Paused playback").build()).setEphemeral(Kvintakord.lastQueueMessageExists(guild)).queue();
+                if (kvintakord.pause(guild)) {
+                    event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Paused playback").build()).setEphemeral(KvintakordDiscordManager.lastQueueMessageExists(guild)).queue();
                 }
                 else {
-                    event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Resumed playback").build()).setEphemeral(Kvintakord.lastQueueMessageExists(guild)).queue();
+                    event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Resumed playback").build()).setEphemeral(KvintakordDiscordManager.lastQueueMessageExists(guild)).queue();
                 }
 
-                Kvintakord.updateLastQueueMessage(guild);
+                KvintakordDiscordManager.updateLastQueueMessage(guild);
             }
             case "music/volume" -> {
-                Kvintakord.checkAllConditions(member);
+                KvintakordDiscordManager.checkAllConditions(member);
 
                 Integer vol = event.getOption("volume") != null ? (int) Objects.requireNonNull(event.getOption("volume")).getAsLong() : null;
 
                 if (vol == null) {
-                    event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Volume is `" + Kvintakord.getVolume(guild)+ "`").build()).setEphemeral(Kvintakord.lastQueueMessageExists(guild)).queue();
+                    event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Volume is `" + kvintakord.getVolume(guild)+ "`").build()).setEphemeral(KvintakordDiscordManager.lastQueueMessageExists(guild)).queue();
                 }
                 else {
-                    Kvintakord.setVolume(guild, vol);
+                    kvintakord.setVolume(guild, vol);
 
-                    event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Set volume to `" + vol + "`").build()).setEphemeral(Kvintakord.lastQueueMessageExists(guild)).queue();
+                    event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Set volume to `" + vol + "`").build()).setEphemeral(KvintakordDiscordManager.lastQueueMessageExists(guild)).queue();
                 }
 
-                Kvintakord.updateLastQueueMessage(guild);
+                KvintakordDiscordManager.updateLastQueueMessage(guild);
             }
             case "music/loop/get", "music/loop/all", "music/loop/single", "music/loop/off" -> {
-                Kvintakord.checkAllConditions(member);
+                KvintakordDiscordManager.checkAllConditions(member);
 
-                event.deferReply(Kvintakord.lastQueueMessageExists(guild)).queue();
+                event.deferReply(KvintakordDiscordManager.lastQueueMessageExists(guild)).queue();
                 String msg = " Disabled loop";
 
                 if (subcommand.endsWith("get")) {
-                    event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Current loop mode: `" + Kvintakord.getLoop(guild).name() + "`").build()).queue();
+                    event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Current loop mode: `" + kvintakord.getLoop(guild).name() + "`").build()).queue();
                     return;
                 }
                 else if (subcommand.endsWith("all")) {
-                    if (Kvintakord.getLoop(guild) != Kvintakord.LoopMode.ALL) {
-                        Kvintakord.setLoop(guild, Kvintakord.LoopMode.ALL);
+                    if (kvintakord.getLoop(guild) != Kvintakord.LoopMode.ALL) {
+                        kvintakord.setLoop(guild, Kvintakord.LoopMode.ALL);
                         msg = " Enabled queue loop";
                     }
                     else {
-                        Kvintakord.setLoop(guild, Kvintakord.LoopMode.OFF);
+                        kvintakord.setLoop(guild, Kvintakord.LoopMode.OFF);
                     }
                 }
                 else if (subcommand.endsWith("single")) {
-                    if (Kvintakord.getLoop(guild) != Kvintakord.LoopMode.SINGLE) {
-                        Kvintakord.setLoop(guild, Kvintakord.LoopMode.SINGLE);
+                    if (kvintakord.getLoop(guild) != Kvintakord.LoopMode.SINGLE) {
+                        kvintakord.setLoop(guild, Kvintakord.LoopMode.SINGLE);
                         msg = " Enabled single track loop";
                     }
                     else {
-                        Kvintakord.setLoop(guild, Kvintakord.LoopMode.OFF);
+                        kvintakord.setLoop(guild, Kvintakord.LoopMode.OFF);
                     }
                 }
                 else {
-                    if (Kvintakord.getLoop(guild) != Kvintakord.LoopMode.OFF) {
-                        Kvintakord.setLoop(guild, Kvintakord.LoopMode.OFF);
+                    if (kvintakord.getLoop(guild) != Kvintakord.LoopMode.OFF) {
+                        kvintakord.setLoop(guild, Kvintakord.LoopMode.OFF);
                     }
                     else {
                         throw new BotException("Loop is already disabled");
@@ -144,20 +150,20 @@ public class MusicCmd extends BotSlash {
                 }
 
                 event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + msg).build()).queue();
-                Kvintakord.updateLastQueueMessage(guild);
+                KvintakordDiscordManager.updateLastQueueMessage(guild);
             }
             case "music/queue" -> {
-                Kvintakord.isPlayingElseFail(guild);
+                KvintakordDiscordManager.isPlayingElseFail(guild);
 
                 event.deferReply().queue();
 
-                Message oldMessage = Kvintakord.removeLastQueueMessage(guild);
+                Message oldMessage = KvintakordDiscordManager.removeLastQueueMessage(guild);
 
                 event.getHook().editOriginalEmbeds(FormatUtil.getQueueEmbed(guild)).complete()
                         .editMessageComponents(
                                 ActionRow.of(new PauseButton(), new SkipButton(), new LoopButton(), new StopButton(), new LyricsButton()),
                                 ActionRow.of(new RefreshButton(), new ClearButton(), new DestroyButton())
-                        ).queue((msg) -> Kvintakord.setLastQueueMessage(guild, msg));
+                        ).queue((msg) -> KvintakordDiscordManager.setLastQueueMessage(guild, msg));
 
                 if (oldMessage != null) {
                     oldMessage.editMessageEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).complete()
@@ -165,11 +171,11 @@ public class MusicCmd extends BotSlash {
                 }
             }
             case "music/skip" -> {
-                Kvintakord.checkAllConditions(member);
+                KvintakordDiscordManager.checkAllConditions(member);
 
                 int location = event.getOption("to") != null ? (int) Objects.requireNonNull(event.getOption("to")).getAsLong() : 1;
 
-                if (!Kvintakord.skipToTrack(location - 1, guild)) {
+                if (!kvintakord.skipToTrack(location - 1, guild)) {
                     event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Stopped and disconnected; no tracks were queued").build()).queue();
                 }
                 else {
@@ -181,69 +187,64 @@ public class MusicCmd extends BotSlash {
                     }
                 }
 
-                Kvintakord.updateLastQueueMessage(guild);
+                KvintakordDiscordManager.updateLastQueueMessage(guild);
             }
             case "music/seek" -> {
-                Kvintakord.checkAllConditions(member);
+                KvintakordDiscordManager.checkAllConditions(member);
 
                 String input = event.getOption("time") != null ? Objects.requireNonNull(event.getOption("time")).getAsString() : null;
 
-                if (!Kvintakord.seekTo(FormatUtil.decodeTime(input), guild)) {
+                if (!kvintakord.seekTo(FormatUtil.decodeTime(input), guild)) {
                     throw new BotException("Seek is not supported by this track");
                 }
                 else {
-                    event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Started playing from " + input).build()).setEphemeral(Kvintakord.lastQueueMessageExists(guild)).queue();
+                    event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Started playing from " + input).build()).setEphemeral(KvintakordDiscordManager.lastQueueMessageExists(guild)).queue();
                 }
 
-                Kvintakord.updateLastQueueMessage(guild);
+                KvintakordDiscordManager.updateLastQueueMessage(guild);
             }
             case "music/remove" -> {
-                Kvintakord.checkAllConditions(member);
+                KvintakordDiscordManager.checkAllConditions(member);
 
                 int location = (int) Objects.requireNonNull(event.getOption("location")).getAsLong();
-                AudioTrack track = Kvintakord.getTrack(location - 1, guild);
+                AudioTrack track = kvintakord.getTrack(location - 1, guild);
 
-                if (Kvintakord.removeTrack(location - 1, guild)) {
-                    event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Removed " + FormatUtil.formatTrackLink(track) + " at `" + location + "`").build()).setEphemeral(Kvintakord.lastQueueMessageExists(guild)).queue();
+                if (kvintakord.removeTrack(location - 1, guild)) {
+                    event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Removed " + FormatUtil.formatTrackLink(track) + " at `" + location + "`").build()).setEphemeral(KvintakordDiscordManager.lastQueueMessageExists(guild)).queue();
                 }
                 else {
                     throw new BotException("Removal failed");
                 }
 
-                Kvintakord.updateLastQueueMessage(guild);
+                KvintakordDiscordManager.updateLastQueueMessage(guild);
             }
             case "music/move" -> {
-                Kvintakord.checkAllConditions(member);
+                KvintakordDiscordManager.checkAllConditions(member);
 
                 int from = (int) Objects.requireNonNull(event.getOption("from")).getAsLong();
                 int to = (int) Objects.requireNonNull(event.getOption("to")).getAsLong();
 
-                AudioTrack track = Kvintakord.getTrack(from - 1, guild);
-                Kvintakord.moveTrack(from - 1, to - 1, guild);
+                AudioTrack track = kvintakord.getTrack(from - 1, guild);
+                kvintakord.moveTrack(from - 1, to - 1, guild);
 
-                event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Moved " + FormatUtil.formatTrackLink(track) + " from `" + from + "` to `" + to + "`").build()).setEphemeral(Kvintakord.lastQueueMessageExists(guild)).queue();
+                event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Moved " + FormatUtil.formatTrackLink(track) + " from `" + from + "` to `" + to + "`").build()).setEphemeral(KvintakordDiscordManager.lastQueueMessageExists(guild)).queue();
 
-                Kvintakord.updateLastQueueMessage(guild);
+                KvintakordDiscordManager.updateLastQueueMessage(guild);
             }
             case "music/lyrics" -> {
 
-                event.deferReply(Kvintakord.lastQueueMessageExists(guild)).queue();
+                event.deferReply(KvintakordDiscordManager.lastQueueMessageExists(guild)).queue();
 
                 String name = event.getOption("name") != null ? Objects.requireNonNull(event.getOption("name")).getAsString() : null;
 
                 if (name == null) {
-                    Kvintakord.isPlayingElseFail(guild);
-                    AudioTrack track = Objects.requireNonNull(Kvintakord.getCurrentTrack(guild));
+                    KvintakordDiscordManager.isPlayingElseFail(guild);
+                    AudioTrack track = Objects.requireNonNull(kvintakord.getCurrentTrack(guild));
 
-                    if (Kvintakord.isSpotifyTrack(track)) {
-                        name = Kvintakord.getTrackName(track) + " " + Kvintakord.getTrackAuthor(track);
-                    }
-                    else {
-                        name = Kvintakord.getTrackName(track);
-                    }
+                    name = track.getInfo().title + " " + track.getInfo().author;
                 }
 
-                Lyrics lyrics = Kvintakord.lyricsFor(name);
+                Lyrics lyrics = kvintakord.lyricsFor(name);
 
                 if (lyrics == null) {
                     throw new BotException("Lyrics not found, have you tried /music lyrics <name>?");
@@ -290,23 +291,24 @@ public class MusicCmd extends BotSlash {
                 OrderedMenu.Builder builder = new OrderedMenu.Builder()
                         .allowTextInput(true)
                         .useCancelButton(true)
-                        .setEventWaiter(Bot.getWaiter())
+                        .setEventWaiter(Bot.getEventWaiter())
                         .setColor(FormatUtil.KVINTAKORD_COLOR)
                         .setTimeout(1, TimeUnit.MINUTES);
 
                 event.deferReply(true).queue();
 
-                Kvintakord.getPlayerManager().loadItemOrdered(guild, "ytsearch: " + query, new AudioLoadResultHandler() {
+                kvintakord.getPlayerManager().loadItemOrdered(guild, "ytsearch: " + query, new AudioLoadResultHandler() {
                     @Override
                     public void trackLoaded(AudioTrack track) {
                         EmbedBuilder embed = FormatUtil.kvintakordEmbed(FormatUtil.formatTrackLink(track), "Search result for: `" + query + "`");
 
                         event.getHook().editOriginalEmbeds(embed.build()).queue();
 
-                        if (Kvintakord.isPlaying(guild)) {
-                            Kvintakord.play(Kvintakord.currentVoiceChannel(guild), Kvintakord.getGuildMusicManager(guild), track);
+                        if (kvintakord.isPlaying(guild)) {
+                            track.setUserData(new TrackMetadata(track));
+                            kvintakord.play(KvintakordDiscordManager.currentVoiceChannel(guild), kvintakord.getGuildMusicManager(guild), track);
 
-                            Kvintakord.updateLastQueueMessage(guild);
+                            KvintakordDiscordManager.updateLastQueueMessage(guild);
                         }
                     }
 
@@ -317,19 +319,21 @@ public class MusicCmd extends BotSlash {
                         builder.setText("**Search results for: `" + query + "`**")
                                 .setSelection((msg, i) -> {
                                     AudioTrack track = playlist.getTracks().get(i - 1);
+                                    track.setUserData(new TrackMetadata(track));
 
                                     if (channel == null) {
                                         throw new BotException("You are not in a voice channel");
                                     }
-                                    Kvintakord.play(channel, Kvintakord.getGuildMusicManager(guild), track);
+                                    kvintakord.play(channel, kvintakord.getGuildMusicManager(guild), track);
 
-                                    Kvintakord.updateLastQueueMessage(guild);
+                                    KvintakordDiscordManager.updateLastQueueMessage(guild);
                                 })
                                 .setCancel((msg) -> {})
                                 .setUsers(event.getUser());
 
                         for (int i = 0; i < 5 && i < playlist.getTracks().size(); i++) {
                             AudioTrack track = playlist.getTracks().get(i);
+                            track.setUserData(new TrackMetadata(track));
 
                             builder.addChoice("**" + (i + 1) + ".** [" + FormatUtil.formatTime(track.getDuration()) + "] " + FormatUtil.formatTrackLink(track) + "\n");
                         }
@@ -355,16 +359,16 @@ public class MusicCmd extends BotSlash {
                 });
             }
             case "music/clear" -> {
-                Kvintakord.checkAllConditions(member);
+                KvintakordDiscordManager.checkAllConditions(member);
 
-                Kvintakord.clearQueue(guild);
+                kvintakord.clearQueue(guild);
 
-                event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Cleared the queue").build()).setEphemeral(Kvintakord.lastQueueMessageExists(guild)).queue();
+                event.replyEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Cleared the queue").build()).setEphemeral(KvintakordDiscordManager.lastQueueMessageExists(guild)).queue();
 
-                Kvintakord.updateLastQueueMessage(guild);
+                KvintakordDiscordManager.updateLastQueueMessage(guild);
             }
             case "music/deafen" -> {
-                Kvintakord.checkAllConditions(member);
+                KvintakordDiscordManager.checkAllConditions(member);
 
                 Member me = guild.getSelfMember();
                 Objects.requireNonNull(me.getVoiceState());
@@ -434,7 +438,7 @@ public class MusicCmd extends BotSlash {
         };
     }
 
-    public static class Listener extends Kvintakord.AudioEventListener {
+    public static class Listener extends AudioEventListener {
 
         private final Guild guild;
         private final SlashCommandEvent event;
@@ -448,7 +452,7 @@ public class MusicCmd extends BotSlash {
         public void onTrackStart(AudioTrack track) {
             MessageEmbed embed = FormatUtil.kvintakordEmbed(BotEmoji.YES + " Started playing " + FormatUtil.formatTrackLink(track)).build();
 
-            if (Kvintakord.updateLastQueueMessage(guild)) {
+            if (KvintakordDiscordManager.updateLastQueueMessage(guild)) {
                 return;
             }
 
@@ -459,15 +463,15 @@ public class MusicCmd extends BotSlash {
         public void onTrackQueue(AudioTrack track) {
             MessageEmbed embed = FormatUtil.kvintakordEmbed(BotEmoji.YES + " Added to queue " + FormatUtil.formatTrackLink(track)).build();
 
-            if (Kvintakord.updateLastQueueMessage(guild)) {
+            if (KvintakordDiscordManager.updateLastQueueMessage(guild)) {
                 return;
             }
 
-            if (Kvintakord.updateLastTrackQueuedMessage(guild, embed)) {
+            if (KvintakordDiscordManager.updateLastTrackQueuedMessage(guild, embed)) {
                 return;
             }
 
-            event.getChannel().sendMessageEmbeds(embed).queue((msg) -> Kvintakord.setLastTrackQueuedMessage(guild, msg));
+            event.getChannel().sendMessageEmbeds(embed).queue((msg) -> KvintakordDiscordManager.setLastTrackQueuedMessage(guild, msg));
         }
 
         @Override

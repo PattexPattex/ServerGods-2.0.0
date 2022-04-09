@@ -9,7 +9,7 @@ import com.pattexpattex.servergods2.commands.slash.moderation.BanCmd;
 import com.pattexpattex.servergods2.commands.slash.moderation.KickCmd;
 import com.pattexpattex.servergods2.commands.slash.moderation.MuteCmd;
 import com.pattexpattex.servergods2.commands.slash.moderation.WakeUpCmd;
-import com.pattexpattex.servergods2.core.BotException;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import com.pattexpattex.servergods2.util.OtherUtil;

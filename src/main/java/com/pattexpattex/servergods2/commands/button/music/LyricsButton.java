@@ -2,9 +2,10 @@ package com.pattexpattex.servergods2.commands.button.music;
 
 import com.jagrosh.jlyrics.Lyrics;
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.BotException;
-import com.pattexpattex.servergods2.core.Kvintakord;
 import com.pattexpattex.servergods2.core.commands.BotButton;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
+import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
+import com.pattexpattex.servergods2.core.kvintakord.discord.KvintakordDiscordManager;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -23,27 +24,21 @@ public class LyricsButton extends BotButton {
 
     @Override
     public void run(@NotNull ButtonClickEvent event) throws Exception {
+        Kvintakord kvintakord = Bot.getKvintakord();
         Guild guild = Objects.requireNonNull(event.getGuild());
 
-        event.deferReply(Kvintakord.lastQueueMessageExists(guild)).queue();
+        event.deferReply(KvintakordDiscordManager.lastQueueMessageExists(guild)).queue();
 
-        if (Kvintakord.isNotLastQueueMessage(guild, event.getMessage()) || !Kvintakord.isPlaying(guild)) {
+        if (KvintakordDiscordManager.isNotLastQueueMessage(guild, event.getMessage()) || !kvintakord.isPlaying(guild)) {
             event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).complete()
                     .editMessageComponents(Collections.emptyList()).queue();
             return;
         }
 
-        String name;
-        AudioTrack track = Objects.requireNonNull(Kvintakord.getCurrentTrack(guild));
+        AudioTrack track = Objects.requireNonNull(kvintakord.getCurrentTrack(guild));
+        String name = track.getInfo().title + " " + track.getInfo().author;
 
-        if (Kvintakord.isSpotifyTrack(track)) {
-            name = Kvintakord.getTrackName(track) + " " + Kvintakord.getTrackAuthor(track);
-        }
-        else {
-            name = Kvintakord.getTrackName(track);
-        }
-
-        Lyrics lyrics = Kvintakord.lyricsFor(name);
+        Lyrics lyrics = kvintakord.lyricsFor(name);
 
         if (lyrics == null) {
             throw new BotException("Lyrics not found");

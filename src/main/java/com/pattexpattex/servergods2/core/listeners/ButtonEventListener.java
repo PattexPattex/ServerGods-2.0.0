@@ -1,7 +1,7 @@
 package com.pattexpattex.servergods2.core.listeners;
 
 import com.pattexpattex.servergods2.commands.button.music.*;
-import com.pattexpattex.servergods2.core.BotException;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotButton;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import com.pattexpattex.servergods2.util.OtherUtil;

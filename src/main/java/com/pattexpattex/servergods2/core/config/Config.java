@@ -14,16 +14,15 @@ import java.util.Objects;
 
 public class Config {
 
-    //Constructor
+    private final static Logger log = LoggerFactory.getLogger(Config.class);
+
+    private final JSONObject defaultConfig;
+    private final JSONObject config;
+
     public Config() {
+        defaultConfig = new JSONObject(Objects.requireNonNull(OtherUtil.loadResource(this.getClass(), "/config.json")));
         config = readConfig();
     }
-
-    private final JSONObject config;
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
-    //Template config.json in resources
-    private final JSONObject defaultConf = new JSONObject(Objects.requireNonNull(OtherUtil.loadResource(this, "/config.json")));
 
     private JSONObject readConfig() {
 
@@ -37,13 +36,13 @@ public class Config {
             if (file.createNewFile()) {
                 try {
                     //Write the default to the file
-                    Files.write(OtherUtil.getPath(filename), defaultConf.toString(4).getBytes());
+                    Files.write(OtherUtil.getPath(filename), defaultConfig.toString(4).getBytes());
 
                     log.info("Created new config file, please fill it out");
                 }
                 //Oops
                 catch (IOException e) {
-                    log.error("Failed to write to \"" + filename + "\"", e);
+                    log.error("Failed to write to \"{}\"", filename, e);
                     System.exit(-1);
                 }
 
@@ -63,7 +62,7 @@ public class Config {
         return obj;
     }
 
-    public String getConfigValue(String key) throws IllegalArgumentException {
+    public String getValue(String key) throws IllegalArgumentException {
 
         //Searches for the key
         if (config.has(key)) {
@@ -100,7 +99,7 @@ public class Config {
         switch (activity_type) {
             case "playing" -> ac = Activity.playing(activity_text);
             case "watching" -> ac = Activity.watching(activity_text);
-            case "streaming" -> ac = Activity.streaming(activity_text, "https://www.youtube.com/watch?v=dQw4w9WgXcQ%22"); //get rickrolled lol
+            case "streaming" -> ac = Activity.streaming(activity_text, "https://www.youtube.com/watch?v=dQw4w9WgXcQ%22"); //lol
             case "listening" -> ac = Activity.listening(activity_text);
             case "competing" -> ac = Activity.competing(activity_text);
 
@@ -130,7 +129,7 @@ public class Config {
         }
     }
 
-    public boolean getEval() {
+    public boolean enabledEval() {
         return config.getBoolean("eval");
     }
 

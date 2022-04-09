@@ -1,7 +1,7 @@
 package com.pattexpattex.servergods2.core.commands;
 
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.BotException;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.config.Config;
 import com.pattexpattex.servergods2.core.listeners.SlashEventListener;
 import net.dv8tion.jda.api.Permission;
@@ -89,7 +89,7 @@ public abstract class BotSlash {
 
     /**
      * Because of the implementation, this string must be identical to the command reference in
-     * {@link Config.Commands}, {@code config.json} and {@code server_config.json}.
+     * {@link Config}, {@code config.json} and {@code server_config.json}.
      *
      * @return the command's name
      * @since 2.1.0
