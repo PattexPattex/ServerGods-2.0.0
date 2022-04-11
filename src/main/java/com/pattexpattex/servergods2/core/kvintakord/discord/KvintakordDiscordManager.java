@@ -1,32 +1,53 @@
 package com.pattexpattex.servergods2.core.kvintakord.discord;
 
-import com.pattexpattex.servergods2.core.Bot;
+import com.pattexpattex.servergods2.commands.button.music.*;
 import com.pattexpattex.servergods2.core.exceptions.BotException;
+import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
 import com.pattexpattex.servergods2.core.kvintakord.listener.AudioEventDispatcher;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.Component;
 import net.dv8tion.jda.api.managers.AudioManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class KvintakordDiscordManager {
 
-    private static final Map<Long, Message> lastQueueMessages;
-    private static final Map<Long, Message> lastTrackQueuedMessages;
+    private final Kvintakord kvintakord;
+    private final Map<Long, Message> lastQueueMessages;
+    private final Map<Long, Message> lastTrackQueuedMessages;
+    private final Map<Long, Integer> currentPages;
 
-    static {
+    public KvintakordDiscordManager(Kvintakord kvintakord) {
+        this.kvintakord = kvintakord;
         lastQueueMessages = new HashMap<>();
         lastTrackQueuedMessages = new HashMap<>();
+        currentPages = new HashMap<>();
     }
-    public static void isPlayingElseFail(Guild guild) {
-        if (!Bot.getKvintakord().isPlaying(guild)) throw new BotException("Nothing is currently playing");
+
+    public void isPlayingElseFail(Guild guild) {
+        if (!kvintakord.isPlaying(guild)) throw new BotException("Nothing is currently playing");
+    }
+
+    public ActionRow[] getActionRows(Guild guild) {
+        List<Component> firstRow = List.of(new PauseButton(), new SkipButton(), new LoopButton(), new StopButton(), new LyricsButton());
+        List<Component> secondRow = new ArrayList<>(List.of(new RefreshButton(), new ClearButton(), new DestroyButton()));
+
+        boolean addExtras = multiPaged(guild);
+
+        if (addExtras) {
+            secondRow.add(PreviousPageButton.getInstance(guild));
+            secondRow.add(NextPageButton.getInstance(guild));
+        }
+
+        return new ActionRow[]{
+                ActionRow.of(firstRow), ActionRow.of(secondRow)
+        };
     }
 
     /**
@@ -34,7 +55,7 @@ public class KvintakordDiscordManager {
      * nothing is currently playing, the member is self-deafened or the member
      * and this bot are not in the same voice channel.
      */
-    public static void checkAllConditions(Member member) {
+    public void checkAllConditions(@NotNull Member member) {
         GuildVoiceState state = Objects.requireNonNull(member.getVoiceState());
         Guild guild = member.getGuild();
 
@@ -46,25 +67,53 @@ public class KvintakordDiscordManager {
     }
 
     /* -- Queue Command Message -- */
-    public static boolean updateLastQueueMessage(@NotNull Guild guild, @NotNull ButtonClickEvent event) {
+
+    public int currentPage(@NotNull Guild guild) {
+        int queueSize = kvintakord.getQueue(guild).size();
+
+        if (queueSize <= 20) {
+            currentPages.remove(guild.getIdLong());
+            return 0;
+        }
+        return currentPages.getOrDefault(guild.getIdLong(), 0);
+    }
+
+    public boolean multiPaged(@NotNull Guild guild) {
+        int queueSize = kvintakord.getQueue(guild).size();
+        return queueSize > 20;
+    }
+
+    public boolean isNextPage(@NotNull Guild guild) {
+        int queueSize = kvintakord.getQueue(guild).size();
+        int currentPage = currentPage(guild);
+
+        return queueSize > 20 * (currentPage + 1);
+    }
+
+    public boolean isPreviousPage(@NotNull Guild guild) {
+        return currentPage(guild) != 0;
+    }
+
+    public synchronized boolean updateLastQueueMessage(@NotNull Guild guild, @NotNull ButtonClickEvent event, int page) {
         Message message = getLastQueueMessage(guild);
 
         if (message == null) {
             return false;
         }
 
-        return updateLastQueueMessage(guild) && message.getIdLong() == event.getMessage().getIdLong();
+        return updateLastQueueMessage(guild, page) && message.getIdLong() == event.getMessage().getIdLong();
     }
-    public static boolean updateLastQueueMessage(@NotNull Guild guild) {
+
+    public synchronized boolean updateLastQueueMessage(@NotNull Guild guild, int page) {
         Message message = getLastQueueMessage(guild);
 
-        if (message != null && Bot.getKvintakord().isPlaying(guild)) {
-            message.editMessageEmbeds(FormatUtil.getQueueEmbed(guild)).queue();
+        if (message != null && kvintakord.isPlaying(guild)) {
+            currentPages.put(guild.getIdLong(), page);
+            message.editMessageEmbeds(FormatUtil.getQueueEmbed(guild, page)).setActionRows(getActionRows(guild)).queue();
             return true;
         }
-        else if (message != null && !Bot.getKvintakord().isPlaying(guild)) {
-            message.editMessageEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Playback ended").build()).queue();
-            message.editMessageComponents(Collections.emptyList()).queue();
+        else if (message != null && !kvintakord.isPlaying(guild)) {
+            message.editMessageEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Playback ended").build()).setActionRows(Collections.emptyList()).queue();
 
             removeLastQueueMessage(guild);
             return true;
@@ -72,22 +121,27 @@ public class KvintakordDiscordManager {
 
         return false;
     }
-    public static boolean lastQueueMessageExists(@NotNull Guild guild) {
+
+    public synchronized boolean lastQueueMessageExists(@NotNull Guild guild) {
         return getLastQueueMessage(guild) != null;
     }
-    public static boolean isNotLastQueueMessage(@NotNull Guild guild, @NotNull Message message) {
+
+    public synchronized boolean isNotLastQueueMessage(@NotNull Guild guild, @NotNull Message message) {
         Message message1 = getLastQueueMessage(guild);
 
         return message1 == null || message1.getIdLong() != message.getIdLong();
     }
 
-    public static void setLastQueueMessage(@NotNull Guild guild, @NotNull Message message) {
+    public synchronized void setLastQueueMessage(@NotNull Guild guild, @NotNull Message message) {
         lastQueueMessages.put(guild.getIdLong(), message);
     }
-    public static @Nullable Message removeLastQueueMessage(@NotNull Guild guild) {
+
+    public synchronized @Nullable Message removeLastQueueMessage(@NotNull Guild guild) {
+        currentPages.remove(guild.getIdLong());
         return lastQueueMessages.remove(guild.getIdLong());
     }
-    public synchronized static @Nullable Message getLastQueueMessage(@NotNull Guild guild) {
+
+    public synchronized @Nullable Message getLastQueueMessage(@NotNull Guild guild) {
         Message message = lastQueueMessages.get(guild.getIdLong());
 
         if (message != null) {
@@ -110,7 +164,7 @@ public class KvintakordDiscordManager {
     }
 
     /* -- Track Queued Message -- */
-    public static boolean updateLastTrackQueuedMessage(@NotNull Guild guild, @NotNull MessageEmbed embed) {
+    public synchronized boolean updateLastTrackQueuedMessage(@NotNull Guild guild, @NotNull MessageEmbed embed) {
         Message message = getLastTrackQueuedMessage(guild);
 
         if (message != null) {
@@ -121,13 +175,15 @@ public class KvintakordDiscordManager {
         return false;
     }
 
-    public static void setLastTrackQueuedMessage(@NotNull Guild guild, @NotNull Message message) {
+    public synchronized void setLastTrackQueuedMessage(@NotNull Guild guild, @NotNull Message message) {
         lastTrackQueuedMessages.put(guild.getIdLong(), message);
     }
-    public static void removeLastTrackQueuedMessage(@NotNull Guild guild) {
+
+    public synchronized void removeLastTrackQueuedMessage(@NotNull Guild guild) {
         lastTrackQueuedMessages.remove(guild.getIdLong());
     }
-    public synchronized static @Nullable Message getLastTrackQueuedMessage(@NotNull Guild guild) {
+
+    public synchronized @Nullable Message getLastTrackQueuedMessage(@NotNull Guild guild) {
         Message message = lastTrackQueuedMessages.get(guild.getIdLong());
 
         if (message != null) {
@@ -150,16 +206,17 @@ public class KvintakordDiscordManager {
     }
 
     //Voice channel logic
-    public static void connectToVoice(AudioChannel channel, AudioManager audioManager) {
+    public void connectToVoice(AudioChannel channel, @NotNull AudioManager audioManager) {
         if (!audioManager.isConnected()) {
             audioManager.openAudioConnection(channel);
 
-            Bot.getKvintakord().getGuildMusicManager(channel.getGuild()).player.setPaused(false);
+            kvintakord.getGuildMusicManager(channel.getGuild()).player.setPaused(false);
 
             AudioEventDispatcher.onConnectToAudioChannel(channel.getGuild(), channel);
         }
     }
-    public static void disconnectFromVoice(AudioManager audioManager) {
+
+    public void disconnectFromVoice(@NotNull AudioManager audioManager) {
         if (audioManager.isConnected()) {
             AudioChannel channel = audioManager.getConnectedChannel();
             audioManager.closeAudioConnection();
@@ -167,7 +224,8 @@ public class KvintakordDiscordManager {
             AudioEventDispatcher.onDisconnectFromAudioChannel(audioManager.getGuild(), channel);
         }
     }
-    public static @Nullable AudioChannel currentVoiceChannel(Guild guild) {
+
+    public @Nullable AudioChannel currentVoiceChannel(@NotNull Guild guild) {
         return guild.getAudioManager().getConnectedChannel();
     }
 }

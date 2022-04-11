@@ -39,7 +39,7 @@ public class TrackScheduler extends AudioEventAdapter {
     //Methods
     public void queue(AudioTrack track) {
         if (!player.startTrack(track, true)) {
-            queue.offer(track);
+            queue.add(track);
 
             AudioEventDispatcher.onTrackQueue(guild, track);
         }
@@ -125,7 +125,7 @@ public class TrackScheduler extends AudioEventAdapter {
                 trackPlay(trackClone);
             }
             else if (loop == Kvintakord.LoopMode.ALL) {
-                queue.offer(trackClone);
+                queue.add(trackClone);
 
                 trackNext();
             }

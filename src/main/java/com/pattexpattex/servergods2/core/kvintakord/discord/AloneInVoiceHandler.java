@@ -1,6 +1,7 @@
 package com.pattexpattex.servergods2.core.kvintakord.discord;
 
 import com.pattexpattex.servergods2.core.Bot;
+import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
 import com.pattexpattex.servergods2.core.kvintakord.listener.AudioEventDispatcher;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
@@ -13,10 +14,12 @@ public class AloneInVoiceHandler {
 
     private final HashMap<Long, Instant> aloneSince;
     private final long aloneTimeUntilStop;
+    private final Kvintakord kvintakord;
 
-    public AloneInVoiceHandler() {
+    public AloneInVoiceHandler(Kvintakord kvintakord) {
         aloneSince = new HashMap<>();
         aloneTimeUntilStop = Bot.getConfig().getAloneTimeUntilStop();
+        this.kvintakord = kvintakord;
 
         if (aloneTimeUntilStop > 0) {
             Bot.getScheduledExecutor().scheduleWithFixedDelay(this::check, 0, 5, TimeUnit.SECONDS);
@@ -53,9 +56,9 @@ public class AloneInVoiceHandler {
                 continue;
             }
 
-            AudioEventDispatcher.onDisconnectFromAudioChannelBecauseEmpty(guild, KvintakordDiscordManager.currentVoiceChannel(guild));
+            AudioEventDispatcher.onDisconnectFromAudioChannelBecauseEmpty(guild, kvintakord.getDiscordManager().currentVoiceChannel(guild));
 
-            Bot.getKvintakord().stop(guild);
+            kvintakord.stop(guild);
 
             toRemove.add(entrySet.getKey());
         }

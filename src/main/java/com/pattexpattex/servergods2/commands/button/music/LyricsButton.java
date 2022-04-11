@@ -5,7 +5,6 @@ import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotButton;
 import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
-import com.pattexpattex.servergods2.core.kvintakord.discord.KvintakordDiscordManager;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -27,11 +26,10 @@ public class LyricsButton extends BotButton {
         Kvintakord kvintakord = Bot.getKvintakord();
         Guild guild = Objects.requireNonNull(event.getGuild());
 
-        event.deferReply(KvintakordDiscordManager.lastQueueMessageExists(guild)).queue();
+        event.deferReply(Bot.getKvintakord().getDiscordManager().lastQueueMessageExists(guild)).queue();
 
-        if (KvintakordDiscordManager.isNotLastQueueMessage(guild, event.getMessage()) || !kvintakord.isPlaying(guild)) {
-            event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).complete()
-                    .editMessageComponents(Collections.emptyList()).queue();
+        if (Bot.getKvintakord().getDiscordManager().isNotLastQueueMessage(guild, event.getMessage()) || !Bot.getKvintakord().isPlaying(guild)) {
+            event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).setActionRows(Collections.emptyList()).queue();
             return;
         }
 

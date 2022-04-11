@@ -286,7 +286,7 @@ public class FormatUtil {
         Pattern one = Pattern.compile("([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?");
 
         if (!one.matcher(time).matches()) {
-            throw new NumberFormatException();
+            throw new NumberFormatException("Invalid input");
         }
 
         long hours;
@@ -387,18 +387,20 @@ public class FormatUtil {
         return url;
     }
 
-    @Contract("null -> fail")
-    public static @NotNull MessageEmbed getQueueEmbed(Guild guild) {
+    @Contract("null, _ -> fail")
+    public static @NotNull MessageEmbed getQueueEmbed(Guild guild, int page) {
         List<AudioTrack> queue = Bot.getKvintakord().getQueue(guild);
-        AudioTrack currentTrack = Objects.requireNonNull(Bot.getKvintakord().getCurrentTrack(guild));
+        while (queue.size() < page * 20) page--;
+
+        AudioTrack current = Objects.requireNonNull(Bot.getKvintakord().getCurrentTrack(guild));
 
         StringBuilder sb = new StringBuilder();
 
-        if (currentTrack.isSeekable()) {
-            sb.append("**`").append(formatTime(currentTrack.getPosition())).append(" / ").append(formatTime(currentTrack.getDuration())).append("`**");
+        if (current.isSeekable()) {
+            sb.append("**`").append(formatTime(current.getPosition())).append(" / ").append(formatTime(current.getDuration())).append("`**");
         }
         else {
-            sb.append("\uD83D\uDD34").append(" **`").append(formatTime(currentTrack.getDuration())).append("`**");
+            sb.append("\uD83D\uDD34").append(" **`").append(formatTime(current.getDuration())).append("`**");
         }
 
         if (Bot.getKvintakord().isPaused(guild)) {
@@ -413,20 +415,23 @@ public class FormatUtil {
         }
 
         sb.append(" **| \uD83D\uDD0A `").append(Bot.getKvintakord().getVolume(guild)).append("`**");
-
         sb.append("\n\n");
 
+        for (int i = (page * 20); queue.size() > i; i++) {
+            if (sb.length() > 4000 || i >= 20 * (page + 1)) {
+                sb.append(String.format("\n**And %d more...**", queue.size() - i));
+                break;
+            }
 
-        for (int i = 0; queue.size() > i; i++) {
             AudioTrack track = queue.get(i);
 
             sb.append("**").append(i + 1).append(".** `").append(FormatUtil.formatTime(track.getDuration())).append("` ").append(FormatUtil.formatTrackLink(track)).append("\n");
         }
 
         return FormatUtil.kvintakordEmbed(sb.toString())
-                .setTitle(TrackMetadata.getTrackName(currentTrack), (!currentTrack.getIdentifier().startsWith("C:\\") ? TrackMetadata.getTrackUri(currentTrack) : null))
-                .setAuthor(TrackMetadata.getTrackAuthor(currentTrack), TrackMetadata.getTrackAuthorUrl(currentTrack))
-                .setThumbnail(TrackMetadata.getTrackImage(currentTrack))
+                .setTitle(TrackMetadata.getTrackName(current), (!current.getIdentifier().startsWith("C:\\") ? TrackMetadata.getTrackUri(current) : null))
+                .setAuthor(TrackMetadata.getTrackAuthor(current), TrackMetadata.getTrackAuthorUrl(current))
+                .setThumbnail(TrackMetadata.getTrackImage(current))
                 .build();
     }
 

@@ -18,7 +18,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.AudioChannel;
 import net.dv8tion.jda.api.entities.Guild;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -28,7 +27,10 @@ import se.michaelthelin.spotify.model_objects.specification.PlaylistTrack;
 import se.michaelthelin.spotify.model_objects.specification.Track;
 import se.michaelthelin.spotify.model_objects.specification.TrackSimplified;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -37,21 +39,21 @@ import java.util.concurrent.TimeUnit;
  * */
 public class Kvintakord {
 
+    private static final Logger log = LoggerFactory.getLogger(Kvintakord.class);
+
     private final AudioPlayerManager playerManager;
     private final Map<Long, GuildMusicManager> musicManagers;
     private final LyricsClient lyricsClient;
     private final SpotifyManger spotifyManger;
     private final AloneInVoiceHandler aloneInVoiceHandler;
-
-    private static final Logger log = LoggerFactory.getLogger(Kvintakord.class);
+    private final KvintakordDiscordManager discordManager;
 
     public Kvintakord() {
-        log.info("Starting Kvintakord and its dependencies");
-
         musicManagers = new ConcurrentHashMap<>();
         lyricsClient = new LyricsClient(Bot.getConfig().getLyricsProvider());
         spotifyManger = new SpotifyManger();
-        aloneInVoiceHandler = new AloneInVoiceHandler();
+        aloneInVoiceHandler = new AloneInVoiceHandler(this);
+        discordManager = new KvintakordDiscordManager(this);
 
         playerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerRemoteSources(playerManager);
@@ -89,8 +91,6 @@ public class Kvintakord {
         musicManagers.forEach((id, manager) -> manager.player.destroy());
         playerManager.shutdown();
         spotifyManger.shutdown();
-
-        log.info("Successfully shut down Kvintakord");
     }
 
     /* ---- General Playback ---- */
@@ -112,7 +112,7 @@ public class Kvintakord {
                 Paging<PlaylistTrack> spotifyPlaylist = spotifyManger.getPlaylistTracks(identifier);
 
                 for (PlaylistTrack playlistTrack : spotifyPlaylist.getItems()) {
-                    loadAndPlay(channel, "https://open.spotify.com/track/" + spotifyManger.getIdFromUrl(playlistTrack.getTrack().getHref()));
+                    loadAndPlay(channel, "https://open.spotify.com/track/" + spotifyManger.getIdFromUrl(playlistTrack.getTrack().getExternalUrls().get("spotify")));
                 }
 
                 return;
@@ -135,7 +135,7 @@ public class Kvintakord {
             }
         }
 
-        if (identifier.startsWith("https://open.spotify.com/") && !spotifyManger.useSpotify()) {
+        if (identifier.startsWith("https://open.spotify.com/") && spotifyManger.notUseSpotify()) {
             throw new UnsupportedOperationException("Spotify is not supported");
         }
         else if (identifier.startsWith("https://soundcloud.com/")) {
@@ -202,14 +202,14 @@ public class Kvintakord {
 
     //Playback
     public void play(AudioChannel channel, GuildMusicManager musicManager, AudioTrack track) {
-        KvintakordDiscordManager.connectToVoice(channel, channel.getGuild().getAudioManager());
+        discordManager.connectToVoice(channel, channel.getGuild().getAudioManager());
 
         musicManager.player.setVolume(Bot.getGuildConfig(channel.getGuild()).getVolume());
         musicManager.scheduler.queue(track);
     }
 
     public void playFirst(AudioChannel channel, GuildMusicManager musicManager, AudioTrack track) {
-        KvintakordDiscordManager.connectToVoice(channel, channel.getGuild().getAudioManager());
+        discordManager.connectToVoice(channel, channel.getGuild().getAudioManager());
 
         musicManager.player.setVolume(Bot.getGuildConfig(channel.getGuild()).getVolume());
         musicManager.scheduler.queueFirst(track);
@@ -237,11 +237,11 @@ public class Kvintakord {
         musicManager.player.stopTrack();
         musicManager.scheduler.queueClear();
 
-        KvintakordDiscordManager.updateLastQueueMessage(guild);
-        KvintakordDiscordManager.removeLastQueueMessage(guild);
-        KvintakordDiscordManager.removeLastTrackQueuedMessage(guild);
+        discordManager.updateLastQueueMessage(guild, 0);
+        discordManager.removeLastQueueMessage(guild);
+        discordManager.removeLastTrackQueuedMessage(guild);
 
-        KvintakordDiscordManager.disconnectFromVoice(guild.getAudioManager());
+        discordManager.disconnectFromVoice(guild.getAudioManager());
 
         AudioEventDispatcher.onPlaybackEnd(guild, musicManager.player);
     }
@@ -270,7 +270,6 @@ public class Kvintakord {
     /**
      * @return An immutable list of {@code AudioTrack}s currently in the guild's queue.
      */
-    @Contract("_ -> new")
     public @NotNull List<AudioTrack> getQueue(Guild guild) {
         return getGuildMusicManager(guild).scheduler.queueGet();
     }
@@ -415,5 +414,9 @@ public class Kvintakord {
 
     public AloneInVoiceHandler getAloneInVoiceHandler() {
         return aloneInVoiceHandler;
+    }
+
+    public KvintakordDiscordManager getDiscordManager() {
+        return discordManager;
     }
 }

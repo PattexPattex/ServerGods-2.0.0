@@ -40,6 +40,7 @@ public class SpotifyManger {
     private SpotifyApi api;
 
     public SpotifyManger() {
+
         String id = Bot.getConfig().getValue("spotify_app_id");
         String secret = Bot.getConfig().getValue("spotify_app_secret");
 
@@ -71,7 +72,7 @@ public class SpotifyManger {
     }
 
     public void shutdown() {
-        log.info("Shutting down SpotifyManager");
+        useSpotify = false;
         api = null;
     }
 
@@ -106,7 +107,7 @@ public class SpotifyManger {
     }
 
     private void ensureAuth() {
-        if (!useSpotify()) {
+        if (notUseSpotify()) {
             throw new SpotifyException(new UnsupportedOperationException("Spotify is not enabled"));
         }
 
@@ -124,8 +125,8 @@ public class SpotifyManger {
         return api;
     }
 
-    public boolean useSpotify() {
-        return useSpotify;
+    public boolean notUseSpotify() {
+        return !useSpotify;
     }
 
     public boolean isSpotifyTrack(AudioTrack track) {

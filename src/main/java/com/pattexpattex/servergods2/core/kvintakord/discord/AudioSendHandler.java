@@ -4,18 +4,17 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
 import org.jetbrains.annotations.Nullable;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 public class AudioSendHandler implements net.dv8tion.jda.api.audio.AudioSendHandler {
 
-    private final AudioPlayer audioPlayer;
+    private final AudioPlayer player;
     private final ByteBuffer buffer;
     private final MutableAudioFrame frame;
 
-    public AudioSendHandler(AudioPlayer audioPlayer) {
+    public AudioSendHandler(AudioPlayer player) {
 
-        this.audioPlayer = audioPlayer;
+        this.player = player;
         this.buffer = ByteBuffer.allocate(1024);
         this.frame = new MutableAudioFrame();
 
@@ -24,7 +23,7 @@ public class AudioSendHandler implements net.dv8tion.jda.api.audio.AudioSendHand
 
     @Override
     public boolean canProvide() {
-        return audioPlayer.provide(frame);
+        return player.provide(frame);
     }
 
     @Nullable

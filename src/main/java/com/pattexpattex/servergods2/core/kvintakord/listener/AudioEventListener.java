@@ -5,7 +5,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.AudioChannel;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "EmptyMethod"})
 public abstract class AudioEventListener {
     //Track
     public void onTrackLoad(AudioTrack track) {}

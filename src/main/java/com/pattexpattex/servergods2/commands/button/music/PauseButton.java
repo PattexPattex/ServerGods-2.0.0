@@ -2,7 +2,6 @@ package com.pattexpattex.servergods2.commands.button.music;
 
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotButton;
-import com.pattexpattex.servergods2.core.kvintakord.discord.KvintakordDiscordManager;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.Emoji;
@@ -19,21 +18,20 @@ public class PauseButton extends BotButton {
 
     @Override
     public void run(@NotNull ButtonClickEvent event) {
-        KvintakordDiscordManager.checkAllConditions(Objects.requireNonNull(event.getMember()));
+        Bot.getKvintakord().getDiscordManager().checkAllConditions(Objects.requireNonNull(event.getMember()));
 
         Guild guild = Objects.requireNonNull(event.getGuild());
 
         event.deferEdit().queue();
 
-        if (KvintakordDiscordManager.isNotLastQueueMessage(guild, event.getMessage()) || !Bot.getKvintakord().isPlaying(guild)) {
-            event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).complete()
-                    .editMessageComponents(Collections.emptyList()).queue();
+        if (Bot.getKvintakord().getDiscordManager().isNotLastQueueMessage(guild, event.getMessage()) || !Bot.getKvintakord().isPlaying(guild)) {
+            event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).setActionRows(Collections.emptyList()).queue();
             return;
         }
 
         Bot.getKvintakord().pause(guild);
 
-        KvintakordDiscordManager.updateLastQueueMessage(guild);
+        Bot.getKvintakord().getDiscordManager().updateLastQueueMessage(guild, Bot.getKvintakord().getDiscordManager().currentPage(guild));
     }
 
     @Override
