@@ -86,9 +86,8 @@ public class Giveaway extends Thread {
         }
 
         log.info("Scheduled giveaway with id {} to end at {} (in {} seconds)", id, end, end - OtherUtil.epoch());
-        Bot.getExecutor().schedule(() -> {
-            end(false);
-        }, end - OtherUtil.epoch(), TimeUnit.SECONDS);
+        Bot.getScheduledExecutor().schedule(() -> end(false),
+                end - OtherUtil.epoch(), TimeUnit.SECONDS);
     }
 
     public void end(boolean reroll) {
@@ -161,7 +160,7 @@ public class Giveaway extends Thread {
 
         log.info("Scheduling to delete giveaway with id {} from cache in 24hrs", id);
 
-        future = Bot.getExecutor().schedule(() -> {
+        future = Bot.getScheduledExecutor().schedule(() -> {
             log.info("Deleted giveaway with id {} from cache", id);
             manager.removeGiveaway(this);
             manager.writeGiveaways();
@@ -232,9 +231,7 @@ public class Giveaway extends Thread {
         if (end < OtherUtil.epoch()) {
             completed = true;
 
-            log.info("Giveaway with id {} finished, scheduling to delete from cache in 24hrs", id);
-
-            future = Bot.getExecutor().schedule(() -> {
+            future = Bot.getScheduledExecutor().schedule(() -> {
                 log.info("Deleted giveaway with id {} from cache", id);
                 manager.removeGiveaway(this);
                 manager.writeGiveaways();

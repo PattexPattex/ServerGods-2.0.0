@@ -1,4 +1,4 @@
-package com.pattexpattex.servergods2.core;
+package com.pattexpattex.servergods2.core.exceptions;
 
 import com.pattexpattex.servergods2.core.commands.BotButton;
 import com.pattexpattex.servergods2.core.commands.BotSelection;

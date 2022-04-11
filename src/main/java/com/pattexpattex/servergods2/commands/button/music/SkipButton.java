@@ -1,7 +1,8 @@
 package com.pattexpattex.servergods2.commands.button.music;
 
-import com.pattexpattex.servergods2.core.Kvintakord;
+import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotButton;
+import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.Emoji;
@@ -18,26 +19,25 @@ public class SkipButton extends BotButton {
 
     @Override
     public void run(@NotNull ButtonClickEvent event) {
-        Kvintakord.checkAllConditions(Objects.requireNonNull(event.getMember()));
+        Bot.getKvintakord().getDiscordManager().checkAllConditions(Objects.requireNonNull(event.getMember()));
 
         Guild guild = Objects.requireNonNull(event.getGuild());
 
         event.deferEdit().queue();
 
-        if (Kvintakord.isNotLastQueueMessage(guild, event.getMessage()) || !Kvintakord.isPlaying(guild)) {
-            event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).complete()
-                    .editMessageComponents(Collections.emptyList()).queue();
+        if (Bot.getKvintakord().getDiscordManager().isNotLastQueueMessage(guild, event.getMessage()) || !Bot.getKvintakord().isPlaying(guild)) {
+            event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).setActionRows(Collections.emptyList()).queue();
             return;
         }
 
-        if (Kvintakord.getQueue(guild).isEmpty() && Kvintakord.getLoop(guild) == Kvintakord.LoopMode.OFF) {
-            Kvintakord.stop(guild);
+        if (Bot.getKvintakord().getQueue(guild).isEmpty() && Bot.getKvintakord().getLoop(guild) == Kvintakord.LoopMode.OFF) {
+            Bot.getKvintakord().stop(guild);
         }
         else {
-            Kvintakord.skipToTrack(0, guild);
+            Bot.getKvintakord().skipToTrack(0, guild);
         }
 
-        Kvintakord.updateLastQueueMessage(guild);
+        Bot.getKvintakord().getDiscordManager().updateLastQueueMessage(guild, Bot.getKvintakord().getDiscordManager().currentPage(guild));
     }
 
     @Override

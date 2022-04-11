@@ -1,11 +1,11 @@
 package com.pattexpattex.servergods2.commands.slash.fun;
 
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.BotException;
-import com.pattexpattex.servergods2.core.Kvintakord;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
+import com.sedmelluq.discord.lavaplayer.track.TrackMarker;
 import net.dv8tion.jda.api.entities.AudioChannel;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -15,12 +15,11 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 public class RickrollCmd extends BotSlash {
 
     @Override
-    public void run(@NotNull SlashCommandEvent event) throws Exception {
+    public void run(@NotNull SlashCommandEvent event) {
 
         event.deferReply(true).queue(null, this::rethrow);
         Guild guild = Objects.requireNonNull(event.getGuild());
@@ -35,7 +34,7 @@ public class RickrollCmd extends BotSlash {
                     throw new BotException("The user is not connected to a voice channel");
                 }
 
-                Kvintakord.loadAndPlay(audioChannel, "https://www.youtube.com/watch?v=dQw4w9WgXcQ", true);
+                Bot.getKvintakord().loadAndPlay(audioChannel, "https://www.youtube.com/watch?v=dQw4w9WgXcQ", true);
 
                 if (member == event.getMember()) {
                     event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Rickrolled " + audioChannel.getAsMention()).build()).queue(null, this::rethrow);
@@ -44,18 +43,23 @@ public class RickrollCmd extends BotSlash {
                     event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Rickrolled " + member.getAsMention() + " in " + audioChannel.getAsMention()).build()).queue(null, this::rethrow);
                 }
 
-                Bot.getExecutor().schedule(() -> Kvintakord.skipToTrack(0, guild), 62, TimeUnit.SECONDS);
+                new Thread(() -> {
+                    while (Bot.getKvintakord().getCurrentTrack(guild) == null)
+                        Thread.onSpinWait();
+
+                    Bot.getKvintakord().getCurrentTrack(guild).setMarker(new TrackMarker(62000, state -> Bot.getKvintakord().skipToTrack(0, guild)));
+                }).start();
             }
             case "rickroll/stop" -> {
-                if (Kvintakord.currentVoiceChannel(guild) == null) {
+                if (Bot.getKvintakord().getDiscordManager().currentVoiceChannel(guild) == null) {
                     throw new BotException("I am not connected to any voice channel");
                 }
                 else {
-                    AudioChannel channel = Objects.requireNonNull(Kvintakord.currentVoiceChannel(guild));
+                    AudioChannel channel = Objects.requireNonNull(Bot.getKvintakord().getDiscordManager().currentVoiceChannel(guild));
 
-                    Kvintakord.skipToTrack(0, guild);
+                    Bot.getKvintakord().skipToTrack(0, guild);
 
-                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Disconnected from " + channel.getAsMention()).build()).queue(null, this::rethrow);
+                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Stopped rickrolling in " + channel.getAsMention()).build()).queue(null, this::rethrow);
                 }
             }
         }

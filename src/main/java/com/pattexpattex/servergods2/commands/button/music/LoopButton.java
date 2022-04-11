@@ -1,7 +1,8 @@
 package com.pattexpattex.servergods2.commands.button.music;
 
-import com.pattexpattex.servergods2.core.Kvintakord;
+import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotButton;
+import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
 import com.pattexpattex.servergods2.util.BotEmoji;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.Emoji;
@@ -18,27 +19,26 @@ public class LoopButton extends BotButton {
 
     @Override
     public void run(@NotNull ButtonClickEvent event) {
-        Kvintakord.checkAllConditions(Objects.requireNonNull(event.getMember()));
+        Bot.getKvintakord().getDiscordManager().checkAllConditions(Objects.requireNonNull(event.getMember()));
 
         Guild guild = Objects.requireNonNull(event.getGuild());
 
         event.deferEdit().queue();
 
-        if (Kvintakord.isNotLastQueueMessage(guild, event.getMessage()) || !Kvintakord.isPlaying(guild)) {
-            event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).complete()
-                    .editMessageComponents(Collections.emptyList()).queue();
+        if (Bot.getKvintakord().getDiscordManager().isNotLastQueueMessage(guild, event.getMessage()) || !Bot.getKvintakord().isPlaying(guild)) {
+            event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).setActionRows(Collections.emptyList()).queue();
             return;
         }
 
-        Kvintakord.LoopMode loopMode = Kvintakord.getLoop(guild);
+        Kvintakord.LoopMode loopMode = Bot.getKvintakord().getLoop(guild);
 
         switch (loopMode) {
-            case ALL -> Kvintakord.setLoop(guild, Kvintakord.LoopMode.SINGLE);
-            case SINGLE -> Kvintakord.setLoop(guild, Kvintakord.LoopMode.OFF);
-            case OFF -> Kvintakord.setLoop(guild, Kvintakord.LoopMode.ALL);
+            case ALL -> Bot.getKvintakord().setLoop(guild, Kvintakord.LoopMode.SINGLE);
+            case SINGLE -> Bot.getKvintakord().setLoop(guild, Kvintakord.LoopMode.OFF);
+            case OFF -> Bot.getKvintakord().setLoop(guild, Kvintakord.LoopMode.ALL);
         }
 
-        Kvintakord.updateLastQueueMessage(guild);
+        Bot.getKvintakord().getDiscordManager().updateLastQueueMessage(guild, Bot.getKvintakord().getDiscordManager().currentPage(guild));
     }
 
     @Override

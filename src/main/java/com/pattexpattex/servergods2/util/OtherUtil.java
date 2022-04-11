@@ -38,9 +38,9 @@ public class OtherUtil {
         return result;
     }
 
-    public static @Nullable String loadResource(Object clazz, String name) {
+    public static @Nullable String loadResource(Class<?> clazz, String name) {
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(clazz.getClass().getResourceAsStream(name))))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(clazz.getResourceAsStream(name))))) {
 
             StringBuilder sb = new StringBuilder();
 

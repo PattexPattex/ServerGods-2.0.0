@@ -5,6 +5,7 @@ import com.pattexpattex.servergods2.core.config.Config;
 import com.pattexpattex.servergods2.core.config.GuildConfig;
 import com.pattexpattex.servergods2.core.config.GuildConfigManager;
 import com.pattexpattex.servergods2.core.giveaway.GiveawayManager;
+import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
 import com.pattexpattex.servergods2.core.listeners.*;
 import com.pattexpattex.servergods2.core.mute.MuteManager;
 import net.dv8tion.jda.api.JDA;
@@ -17,7 +18,6 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.EnumSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -26,21 +26,15 @@ import java.util.concurrent.ScheduledExecutorService;
  */
 public class Bot {
 
+    private static final Logger log = LoggerFactory.getLogger(Bot.class);
+
+    /* Don't let anyone instantiate this class */
+    private Bot() {}
+
     /* If you are editing the code, could you not change this string?
      * Give some credit to the developer's hard work, or change it,
      * I'm just a comment... */
     public static final String Developer = "<@!714406547161350155>";
-
-    private static Config config;
-    private static GuildConfigManager guildConfigManager;
-    private static GiveawayManager giveawayManager;
-    private static MuteManager muteManager;
-    private static ScheduledExecutorService executors;
-    private static EventWaiter waiter;
-    private static JDA jda;
-
-    private static Logger log;
-    private static boolean debug;
 
     private static final Permission[] permissions = {
             Permission.MESSAGE_SEND,
@@ -65,47 +59,48 @@ public class Bot {
             Permission.MODERATE_MEMBERS
     };
 
+    private static boolean debug;
+    private static JDA jda;
+    private static Config config;
+    private static EventWaiter waiter;
+    private static Kvintakord kvintakord;
+    private static MuteManager muteManager;
+    private static GiveawayManager giveawayManager;
+    private static ScheduledExecutorService executors;
+    private static GuildConfigManager guildConfigManager;
+
+
     public static void main(String[] args) {
 
-        //Logging
-        log = LoggerFactory.getLogger(Bot.class);
-
-        //Event waiting
         executors = Executors.newSingleThreadScheduledExecutor();
-        waiter = new EventWaiter(executors, false);
 
-        //Load the configs
         config = new Config();
+        debug = config.enabledDebugInfo();
         guildConfigManager = new GuildConfigManager();
         giveawayManager = new GiveawayManager();
         muteManager = new MuteManager();
-        debug = getConfig().enabledDebugInfo();
-        String prefix = getConfig().getConfigValue("prefix");
+        kvintakord = new Kvintakord();
+        waiter = new EventWaiter(executors, false);
 
-
-
-        //Try to initialize and start the bot
         try {
-            JDABuilder builder = JDABuilder.createDefault(config.getConfigValue("token"))
-                    .enableCache(CacheFlag.VOICE_STATE, CacheFlag.values())
+            JDABuilder builder = JDABuilder.createDefault(config.getValue("token"))
+                    .enableCache(CacheFlag.VOICE_STATE)
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
-                    .enableIntents(EnumSet.allOf(GatewayIntent.class))
+                    .enableIntents(GatewayIntent.GUILD_MESSAGES,
+                            GatewayIntent.GUILD_MEMBERS,
+                            GatewayIntent.GUILD_MESSAGE_REACTIONS,
+                            GatewayIntent.GUILD_VOICE_STATES)
                     .setActivity(config.getActivity())
                     .setStatus(config.getStatus())
-                    .addEventListeners(
-                            new SlashEventListener(),
+                    .addEventListeners(new SlashEventListener(),
                             new ButtonEventListener(),
                             new SelectionEventListener(),
-
-                            new HiddenEventListener(prefix),
-
+                            new HiddenEventListener(config.getValue("prefix")),
                             new MiscEventListener(),
-                            new Kvintakord.DiscordAudioEventListener(),
-                            waiter
-                    );
-                    /* NativeAudioSendFactory in jda-nas may or may not cause fatal crashes in certain situations,
+                            waiter);
+                    /* NativeAudioSendFactory in JDA-NAS may or may not cause fatal crashes,
                      * probably because of a memory leak, see https://github.com/sedmelluq/jda-nas/issues/12 */
-                    //.setAudioSendFactory(new NativeAudioSendFactory());
+                    //builder.setAudioSendFactory(new NativeAudioSendFactory());
 
             jda = builder.build();
         }
@@ -114,14 +109,12 @@ public class Bot {
         }
     }
 
-    /* Don't let anyone instantiate this class */
-    private Bot() {}
-
     public static void shutdown() {
 
         log.info("Shutting down bot");
 
-        Kvintakord.shutdown();
+        log.info("Shutting down Kvintakord");
+        kvintakord.shutdown();
 
         log.info("Shutting down ScheduledExecutorService");
         executors.shutdown();
@@ -156,23 +149,27 @@ public class Bot {
         return muteManager;
     }
 
+    public static ScheduledExecutorService getScheduledExecutor() {
+        return executors;
+    }
+
+    public static EventWaiter getEventWaiter() {
+        return waiter;
+    }
+
+    public static Kvintakord getKvintakord() {
+        return kvintakord;
+    }
+
+    public static String getPrefix() {
+        return Bot.getConfig().getValue("prefix");
+    }
+
     public static Permission[] getRecommendedPermissions() {
         return permissions;
     }
 
-    public static ScheduledExecutorService getExecutor() {
-        return executors;
-    }
-
-    public static EventWaiter getWaiter() {
-        return waiter;
-    }
-
     public static boolean isDebugInRepliesEnabled() {
         return debug;
-    }
-
-    public static String getPrefix() {
-        return Bot.getConfig().getConfigValue("prefix");
     }
 }

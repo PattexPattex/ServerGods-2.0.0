@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.Objects;
 
-public class RefreshButton extends BotButton {
+public class NextPageButton extends BotButton {
 
     @Override
     public void run(@NotNull ButtonClickEvent event) {
@@ -22,24 +22,38 @@ public class RefreshButton extends BotButton {
 
         event.deferEdit().queue();
 
-        if (Bot.getKvintakord().getDiscordManager().updateLastQueueMessage(guild, event, Bot.getKvintakord().getDiscordManager().currentPage(guild)) && Bot.getKvintakord().isPlaying(guild)) return;
+        if (Bot.getKvintakord().getDiscordManager().updateLastQueueMessage(guild, event, Bot.getKvintakord().getDiscordManager().currentPage(guild) + 1) && Bot.getKvintakord().isPlaying(guild)) return;
 
         event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).setActionRows(Collections.emptyList()).queue();
     }
 
-    @Override
-    public @NotNull ButtonStyle getStyle() {
-        return ButtonStyle.PRIMARY;
-    }
+    public static NextPageButton getInstance(Guild guild) {
+        if (Bot.getKvintakord().getDiscordManager().isNextPage(guild)) {
+            return new NextPageButton();
+        }
 
-    @Override
-    public @Nullable Emoji getEmoji() {
-        return Emoji.fromUnicode("\uD83D\uDD04");
+        return new Disabled();
     }
 
     @Nullable
     @Override
     public String getId() {
-        return "button:music.update";
+        return "button:music.nextpage";
+    }
+
+    @Override
+    public @NotNull ButtonStyle getStyle() {
+        return ButtonStyle.SECONDARY;
+    }
+
+    @Override
+    public @Nullable Emoji getEmoji() {
+        return Emoji.fromUnicode("\u25B6\uFE0F");
+    }
+
+    public static class Disabled extends NextPageButton {
+        public boolean isDisabled() {
+            return true;
+        }
     }
 }

@@ -1,8 +1,9 @@
 package com.pattexpattex.servergods2.util;
 
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.BotException;
-import com.pattexpattex.servergods2.core.Kvintakord;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
+import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
+import com.pattexpattex.servergods2.core.kvintakord.TrackMetadata;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -31,7 +32,7 @@ public class FormatUtil {
     private static final String avatarUrl = Bot.getJDA().getSelfUser().getEffectiveAvatarUrl();
     private static final String kvintakordAvatar = "https://raw.githubusercontent.com/PattexPattex/ServerGods/master/musicGods.png";
 
-    public static final Color COLOR = new Color((int) Long.parseLong(Bot.getConfig().getConfigValue("color"), 16));
+    public static final Color COLOR = new Color((int) Long.parseLong(Bot.getConfig().getValue("color"), 16));
     public static final Color ERR_COLOR = new Color(0xFF2626);
     public static final Color KVINTAKORD_COLOR = new Color(0xDFE393);
 
@@ -163,12 +164,8 @@ public class FormatUtil {
 
     /* ---- Delete Message ---- */
 
-    public static void delete(@NotNull Message message) {
-        message.delete().queue();
-    }
-
     public static void deleteAfter(@NotNull Message message, int seconds) {
-        message.delete().queueAfter(Long.parseLong(String.valueOf(seconds)), TimeUnit.SECONDS);
+        message.delete().queueAfter(seconds, TimeUnit.SECONDS);
     }
 
 
@@ -289,7 +286,7 @@ public class FormatUtil {
         Pattern one = Pattern.compile("([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?");
 
         if (!one.matcher(time).matches()) {
-            throw new NumberFormatException();
+            throw new NumberFormatException("Invalid input");
         }
 
         long hours;
@@ -373,7 +370,7 @@ public class FormatUtil {
     /* ---- Kvintakord ---- */
 
     public static @NotNull String formatTrackLink(@NotNull AudioTrack track) {
-        return "[" + Kvintakord.getTrackName(track) + "](" + Kvintakord.getTrackUri(track) + ")";
+        return "[" + TrackMetadata.getTrackName(track) + "](" + TrackMetadata.getTrackUri(track) + ")";
     }
 
     public static String getLyricsProviderUrl() {
@@ -390,21 +387,23 @@ public class FormatUtil {
         return url;
     }
 
-    @Contract("null -> fail")
-    public static @NotNull MessageEmbed getQueueEmbed(Guild guild) {
-        List<AudioTrack> queue = Kvintakord.getQueue(guild);
-        AudioTrack currentTrack = Objects.requireNonNull(Kvintakord.getCurrentTrack(guild));
+    @Contract("null, _ -> fail")
+    public static @NotNull MessageEmbed getQueueEmbed(Guild guild, int page) {
+        List<AudioTrack> queue = Bot.getKvintakord().getQueue(guild);
+        while (queue.size() < page * 20) page--;
+
+        AudioTrack current = Objects.requireNonNull(Bot.getKvintakord().getCurrentTrack(guild));
 
         StringBuilder sb = new StringBuilder();
 
-        if (currentTrack.isSeekable()) {
-            sb.append("**`").append(formatTime(currentTrack.getPosition())).append(" / ").append(formatTime(currentTrack.getDuration())).append("`**");
+        if (current.isSeekable()) {
+            sb.append("**`").append(formatTime(current.getPosition())).append(" / ").append(formatTime(current.getDuration())).append("`**");
         }
         else {
-            sb.append("\uD83D\uDD34").append(" **`").append(formatTime(currentTrack.getDuration())).append("`**");
+            sb.append("\uD83D\uDD34").append(" **`").append(formatTime(current.getDuration())).append("`**");
         }
 
-        if (Kvintakord.isPaused(guild)) {
+        if (Bot.getKvintakord().isPaused(guild)) {
             sb.append(" **| \u23F8**");
         }
 
@@ -415,21 +414,24 @@ public class FormatUtil {
             sb.append(" **| \uD83D\uDD01**");
         }
 
-        sb.append(" **| \uD83D\uDD0A `").append(Kvintakord.getVolume(guild)).append("`**");
-
+        sb.append(" **| \uD83D\uDD0A `").append(Bot.getKvintakord().getVolume(guild)).append("`**");
         sb.append("\n\n");
 
+        for (int i = (page * 20); queue.size() > i; i++) {
+            if (sb.length() > 4000 || i >= 20 * (page + 1)) {
+                sb.append(String.format("\n**And %d more...**", queue.size() - i));
+                break;
+            }
 
-        for (int i = 0; queue.size() > i; i++) {
             AudioTrack track = queue.get(i);
 
             sb.append("**").append(i + 1).append(".** `").append(FormatUtil.formatTime(track.getDuration())).append("` ").append(FormatUtil.formatTrackLink(track)).append("\n");
         }
 
         return FormatUtil.kvintakordEmbed(sb.toString())
-                .setTitle(Kvintakord.getTrackName(currentTrack), (!currentTrack.getIdentifier().startsWith("C:\\") ? Kvintakord.getTrackUri(currentTrack) : null))
-                .setAuthor(Kvintakord.getTrackAuthor(currentTrack), Kvintakord.getTrackAuthorUrl(currentTrack))
-                .setThumbnail(Kvintakord.getTrackImage(currentTrack))
+                .setTitle(TrackMetadata.getTrackName(current), (!current.getIdentifier().startsWith("C:\\") ? TrackMetadata.getTrackUri(current) : null))
+                .setAuthor(TrackMetadata.getTrackAuthor(current), TrackMetadata.getTrackAuthorUrl(current))
+                .setThumbnail(TrackMetadata.getTrackImage(current))
                 .build();
     }
 

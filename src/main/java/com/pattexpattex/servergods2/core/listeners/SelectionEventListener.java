@@ -2,7 +2,7 @@ package com.pattexpattex.servergods2.core.listeners;
 
 import com.pattexpattex.servergods2.commands.selection.roles.GetRolesSelect;
 import com.pattexpattex.servergods2.commands.selection.roles.SetRolesSelect;
-import com.pattexpattex.servergods2.core.BotException;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSelection;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import com.pattexpattex.servergods2.util.OtherUtil;
