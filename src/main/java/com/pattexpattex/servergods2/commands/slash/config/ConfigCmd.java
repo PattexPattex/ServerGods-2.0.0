@@ -3,7 +3,7 @@ package com.pattexpattex.servergods2.commands.slash.config;
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
 import com.pattexpattex.servergods2.core.config.GuildConfig;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -36,7 +36,7 @@ public class ConfigCmd extends BotSlash {
                 TextChannel welcome = config.getWelcome(guild);
                 String invite = config.getInvite();
 
-                EmbedBuilder builder = FormatUtil.defaultEmbed(null, BotEmoji.SETTINGS + " Server Settings");
+                EmbedBuilder builder = FormatUtil.defaultEmbed(null, Emotes.GEAR + " Server Settings");
 
                 builder.appendDescription("\nMuted role - " +         (muted != null      ? muted.getAsMention() : empty))
                         .appendDescription("\nGiveaway role - " +     (giveaway != null   ? giveaway.getAsMention() : empty))
@@ -65,21 +65,21 @@ public class ConfigCmd extends BotSlash {
                     name = "poll";
                 }
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.SETTINGS + " Set `" + name + "` to " + value).build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.GEAR + " Set `" + name + "` to " + value).build()).queue();
             }
             case "config/set/welcome" -> {
                 TextChannel channel = (TextChannel) Objects.requireNonNull(event.getOption("channel")).getAsGuildChannel();
 
                 config.setWelcome(channel);
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.SETTINGS + " Set `welcome` to " + channel.getAsMention()).build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.GEAR + " Set `welcome` to " + channel.getAsMention()).build()).queue();
             }
             case "config/set/invite" -> {
                 String url = Objects.requireNonNull(event.getOption("url")).getAsString();
 
                 config.setInvite(url);
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.SETTINGS + " Set `invite` to `" + url + "`").build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.GEAR + " Set `invite` to `" + url + "`").build()).queue();
             }
 
             case "config/clear/muted", "config/clear/giveaway", "config/clear/poll", "config/clear/welcome", "config/clear/invite" -> {
@@ -106,7 +106,7 @@ public class ConfigCmd extends BotSlash {
                     name = "invite";
                 }
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.SETTINGS + " Cleared `" + name + "`").build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.GEAR + " Cleared `" + name + "`").build()).queue();
             }
         }
     }

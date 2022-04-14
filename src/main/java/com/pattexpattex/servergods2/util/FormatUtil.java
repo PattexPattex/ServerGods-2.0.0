@@ -30,14 +30,13 @@ import java.util.regex.Pattern;
 public class FormatUtil {
 
     private static final String avatarUrl = Bot.getJDA().getSelfUser().getEffectiveAvatarUrl();
-    private static final String kvintakordAvatar = "https://raw.githubusercontent.com/PattexPattex/ServerGods/master/musicGods.png";
+    private static final String kvintakordAvatarUrl = "https://imgur.com/fMEiH2k.png";
 
     public static final Color COLOR = new Color((int) Long.parseLong(Bot.getConfig().getValue("color"), 16));
     public static final Color ERR_COLOR = new Color(0xFF2626);
     public static final Color KVINTAKORD_COLOR = new Color(0xDFE393);
 
     private FormatUtil() {}
-
 
     /* ---- Generic Embeds ---- */
 
@@ -88,7 +87,7 @@ public class FormatUtil {
     {
         EmbedBuilder builder = defaultEmbed(message, title, thumbnail, image);
 
-        builder.setFooter("Powered by Kvintakord", kvintakordAvatar)
+        builder.setFooter("Powered by Kvintakord", kvintakordAvatarUrl)
                 .setColor(KVINTAKORD_COLOR);
 
         return builder;
@@ -116,8 +115,8 @@ public class FormatUtil {
 
         sb.delete(sb.lastIndexOf(","), sb.length());
 
-        return defaultEmbed(BotEmoji.NO + " You do not have the permission(s) to run this command!\n\n" +
-                BotEmoji.CODE + "*You need the permission(s): `" + sb + "`*", "Oops!").setColor(ERR_COLOR);
+        return defaultEmbed(Emotes.WARNING + " You do not have the permission(s) to run this command!\n\n" +
+                Emotes.INTERROBANG + "*You need the permission(s): `" + sb + "`*", "Oops!").setColor(ERR_COLOR);
     }
 
     public static @NotNull EmbedBuilder noSelfPermissionEmbed(Permission @NotNull ... permissions) {
@@ -129,20 +128,20 @@ public class FormatUtil {
 
         sb.delete(sb.lastIndexOf(","), sb.length());
 
-        return defaultEmbed(BotEmoji.NO + " I do not have the permission(s) to run this command!\n\n" +
-                BotEmoji.CODE + "*I need the permission(s): `" + sb + "`*", "Oops!").setColor(ERR_COLOR);
+        return defaultEmbed(Emotes.WARNING + " I do not have the permission(s) to run this command!\n\n" +
+                Emotes.INTERROBANG + "*I need the permission(s): `" + sb + "`*", "Oops!").setColor(ERR_COLOR);
     }
 
     public static @NotNull EmbedBuilder notEnabledEmbed() {
-        return defaultEmbed(BotEmoji.NO + " This command is not enabled in this server!\n\n" +
-                BotEmoji.CODE + "*Try /enable <command> to enable this command.*", "Oops!").setColor(ERR_COLOR);
+        return defaultEmbed(Emotes.WARNING + " This command is not enabled in this server!\n\n" +
+                Emotes.INTERROBANG + "*Try /enable <command> to enable this command.*", "Oops!").setColor(ERR_COLOR);
     }
 
     public static @NotNull EmbedBuilder errorEmbed(@Nullable Throwable t, Class<?> clazz) {
         EmbedBuilder builder;
         Logger log = LoggerFactory.getLogger(clazz);
 
-        builder = defaultEmbed(BotEmoji.NO + " ", "Oops!").setColor(new Color(0xFF4040));
+        builder = defaultEmbed(Emotes.WARNING + " ", "Oops!").setColor(new Color(0xFF4040));
 
         if (t == null) {
             t = new Exception("null");
@@ -172,7 +171,7 @@ public class FormatUtil {
     /* ---- Mention a User ---- */
 
     public static void mentionUserAndDelete(@NotNull User user, @NotNull TextChannel channel) {
-        Message msg = channel.sendMessage(BotEmoji.MENTION + " " + user.getAsMention()).complete();
+        Message msg = channel.sendMessage(Emotes.BELL + " " + user.getAsMention()).complete();
 
         deleteAfter(msg, 5);
     }
@@ -378,10 +377,10 @@ public class FormatUtil {
         String url;
 
         switch (provider) {
-            default -> url = "https://www.azlyrics.com";
             case "MusixMatch" -> url = "https://www.musixmatch.com/";
             case "Genius" -> url = "https://genius.com/";
             case "LyricsFreak" -> url = "https://www.lyricsfreak.com/";
+            default -> url = "https://www.azlyrics.com";
         }
 
         return url;
@@ -389,7 +388,8 @@ public class FormatUtil {
 
     @Contract("null, _ -> fail")
     public static @NotNull MessageEmbed getQueueEmbed(Guild guild, int page) {
-        List<AudioTrack> queue = Bot.getKvintakord().getQueue(guild);
+        Kvintakord kvintakord = Bot.getKvintakord();
+        List<AudioTrack> queue = kvintakord.getQueue(guild);
         while (queue.size() < page * 20) page--;
 
         AudioTrack current = Objects.requireNonNull(Bot.getKvintakord().getCurrentTrack(guild));
@@ -400,21 +400,16 @@ public class FormatUtil {
             sb.append("**`").append(formatTime(current.getPosition())).append(" / ").append(formatTime(current.getDuration())).append("`**");
         }
         else {
-            sb.append("\uD83D\uDD34").append(" **`").append(formatTime(current.getDuration())).append("`**");
+            sb.append(Emotes.RED_CIRCLE).append(" **`").append(formatTime(current.getDuration())).append("`**");
         }
 
-        if (Bot.getKvintakord().isPaused(guild)) {
-            sb.append(" **| \u23F8**");
+        if (kvintakord.isPaused(guild)) {
+            sb.append(" **| ").append(Emotes.PAUSE).append("**");
         }
 
-        if (Bot.getGuildConfig(guild).getLoop() == Kvintakord.LoopMode.SINGLE) {
-            sb.append(" **| \uD83D\uDD02**");
-        }
-        else if (Bot.getGuildConfig(guild).getLoop() == Kvintakord.LoopMode.ALL) {
-            sb.append(" **| \uD83D\uDD01**");
-        }
+        sb.append(" **| ").append(kvintakord.getLoop(guild).emote()).append("**");
 
-        sb.append(" **| \uD83D\uDD0A `").append(Bot.getKvintakord().getVolume(guild)).append("`**");
+        sb.append(" **| ").append(Emotes.SOUND).append(" `").append(kvintakord.getVolume(guild)).append("`**");
         sb.append("\n\n");
 
         for (int i = (page * 20); queue.size() > i; i++) {
@@ -438,22 +433,22 @@ public class FormatUtil {
 
     /* ---- Giveaways ---- */
 
-    private static final String REACT = " React with \uD83C\uDF89 to enter";
+    private static final String REACT = " React with " + Emotes.TADA + " to enter";
 
     public static EmbedBuilder runningGiveawayEmbed(int winners, long end, String reward, Member host) {
         return defaultEmbed(
                 REACT + "\n" +
-                        (winners == 1 ? BotEmoji.PERSON + " 1 winner" : BotEmoji.PERSON + " " + winners + " winners") + "\n" +
-                        BotEmoji.LOADING + " Ends " + FormatUtil.epochTimestampRelative(end) + "\n" +
-                        BotEmoji.MENTION + " Host: " + host.getAsMention(),
+                        (winners == 1 ? Emotes.PEOPLE + " 1 winner" : Emotes.PEOPLE + " " + winners + " winners") + "\n" +
+                        Emotes.HOURGLASS + " Ends " + FormatUtil.epochTimestampRelative(end) + "\n" +
+                        Emotes.BELL + " Host: " + host.getAsMention(),
 
                 reward);
     }
 
     public static EmbedBuilder endedGiveawayEmbed(long id, String winners, Member host, String reward) {
         return defaultEmbed(
-                "\uD83C\uDF7E Winners: " + winners + "\n" +
-                        BotEmoji.MENTION + " DM " + host.getAsMention() + " to claim the reward!\n\n" +
+                Emotes.TADA + " Winners: " + winners + "\n" +
+                        Emotes.BELL + " DM " + host.getAsMention() + " to claim the reward!\n\n" +
                         "_Reroll available until " + epochTimestamp(OtherUtil.epoch() + (24 * 60 * 60)) + "_\n" +
                         "_Reroll with `/giveaway reroll message-id:" + id + "`_",
                 reward);
@@ -461,15 +456,15 @@ public class FormatUtil {
 
     public static EmbedBuilder noWinnersGiveawayEmbed(long id, String reward) {
         return defaultEmbed(
-                "\u2753 No winners!\n\n" +
+                Emotes.QUESTION + " No winners!\n\n" +
                         "_Reroll available until " + epochTimestamp(OtherUtil.epoch() + (24 * 60 * 60)) + "_\n" +
                         "_Reroll with `/giveaway reroll message-id:" + id + "`_", reward);
     }
 
     public static EmbedBuilder rerollGiveawayEmbed(long id, String winners, Member host, String reward) {
         return defaultEmbed(
-                "\uD83C\uDF7E Re-roll winners: " + winners + "\n" +
-                        BotEmoji.MENTION + " DM " + host.getAsMention() + " to claim the reward!\n\n" +
+                Emotes.TADA + " Re-roll winners: " + winners + "\n" +
+                        Emotes.BELL + " DM " + host.getAsMention() + " to claim the reward!\n\n" +
                         "_Reroll available until " + epochTimestamp(OtherUtil.epoch() + (24 * 60 * 60)) + "_\n" +
                         "_Reroll with `/giveaway reroll message-id:" + id + "`_",
                 reward);

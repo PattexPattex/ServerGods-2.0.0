@@ -1,7 +1,7 @@
 package com.pattexpattex.servergods2.commands.slash.moderation;
 
 import com.pattexpattex.servergods2.core.commands.BotSlash;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -22,7 +22,7 @@ public class KickCmd extends BotSlash {
 
         kickedMember.kick(reason).queue(null, this::rethrow);
 
-        event.replyEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Kicked " + mention + (reason != null ? " with reason: `" + reason + "`" : "")).build()).queue();
+        event.replyEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Kicked " + mention + (reason != null ? " with reason: `" + reason + "`" : "")).build()).queue();
     }
 
     public String getName() {

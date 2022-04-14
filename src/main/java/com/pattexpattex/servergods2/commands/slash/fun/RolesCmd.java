@@ -6,7 +6,7 @@ import com.pattexpattex.servergods2.commands.selection.roles.SetRolesSelect;
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
 import com.pattexpattex.servergods2.core.listeners.SelectionEventListener;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -77,7 +77,7 @@ public class RolesCmd extends BotSlash {
                         }
                     });
 
-                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.ROLE + " Edit the roles").build()).complete().editMessageComponents(
+                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.PERSON + " Edit the roles").build()).complete().editMessageComponents(
                                     ActionRow.of(SelectionEventListener.addSelection(new SetOthersRolesSelect(optionMember)).setup(allOptions, selectedOptions))).queue();
                 }
                 else {
@@ -89,7 +89,7 @@ public class RolesCmd extends BotSlash {
                         }
                     });
 
-                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.ROLE + " Select your roles").build())
+                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.PERSON + " Select your roles").build())
                             .complete().editMessageComponents(ActionRow.of(new GetRolesSelect().setup(availableOptions, selectedOptions))).queue();
                 }
             }
@@ -99,7 +99,7 @@ public class RolesCmd extends BotSlash {
                     return;
                 }
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.ROLE + " Edit the cosmetic roles").build())
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.PERSON + " Edit the cosmetic roles").build())
                         .complete().editMessageComponents(ActionRow.of(new SetRolesSelect().setup(allOptions, availableOptions))).queue();
             }
         }

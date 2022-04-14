@@ -2,7 +2,7 @@ package com.pattexpattex.servergods2.commands.selection.roles;
 
 import com.pattexpattex.servergods2.commands.selection.DisabledSelect;
 import com.pattexpattex.servergods2.core.commands.BotSelection;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -61,7 +61,7 @@ public class SetOthersRolesSelect extends BotSelection {
         guild.modifyMemberRoles(member, rolesToAdd, rolesToRemove).queue();
 
         //Reply
-        event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Modified roles of " +
+        event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Modified roles of " +
                 member.getAsMention()).build()).queue();
 
         //Disable the selection

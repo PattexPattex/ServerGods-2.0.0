@@ -2,7 +2,7 @@ package com.pattexpattex.servergods2.commands.slash.fun;
 
 import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Emote;
@@ -18,7 +18,7 @@ import java.util.Objects;
 public class EmoteCmd extends BotSlash {
 
     @Override
-    public void run(@NotNull SlashCommandEvent event) throws Exception {
+    public void run(@NotNull SlashCommandEvent event) {
         event.deferReply().queue();
 
         Message message = event.getHook().editOriginal(Objects.requireNonNull(event.getOption("emote")).getAsString()).complete();
@@ -45,7 +45,7 @@ public class EmoteCmd extends BotSlash {
         boolean animated = emote.isAnimated();
         String markdown = "`< " + (animated ? "a" : "") +":" + name + ":" + id + ">`";
 
-        message.editMessage(BotEmoji.YES).complete().editMessageEmbeds(FormatUtil.defaultEmbed(
+        message.editMessage(Emotes.YES).complete().editMessageEmbeds(FormatUtil.defaultEmbed(
                 "**Emote: **" + name +
                         "\n**Id: **" + id +
                         "\n**Animated: **" + animated +
@@ -83,7 +83,7 @@ public class EmoteCmd extends BotSlash {
             builder.appendDescription("\n**Copy-paste string: `" + joinedHex + "`**");
         }
 
-        message.editMessage(BotEmoji.YES).complete().editMessageEmbeds(builder.build()).queue();
+        message.editMessage(Emotes.YES).complete().editMessageEmbeds(builder.build()).queue();
     }
 
     private String toHex(int i) {

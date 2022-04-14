@@ -1,10 +1,9 @@
 package com.pattexpattex.servergods2.core.listeners;
 
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
-import com.pattexpattex.servergods2.core.kvintakord.discord.AloneInVoiceHandler;
 import com.pattexpattex.servergods2.core.mute.Mute;
 import com.pattexpattex.servergods2.util.FormatUtil;
+import com.pattexpattex.servergods2.util.OtherUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.ReadyEvent;
@@ -22,6 +21,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.Button;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
@@ -129,45 +129,37 @@ public class MiscEventListener extends ListenerAdapter {
     @Override
     public void onRoleDelete(@NotNull RoleDeleteEvent event) {
         Guild guild = event.getGuild();
+        Role deletedRole = event.getRole();
 
         //Cosmetic roles
-        {
-            List<String> roles = Bot.getGuildConfig(guild).getFunRoles();
-            Role deletedRole = event.getRole();
+        List<String> funRoles = Bot.getGuildConfig(guild).getFunRoles();
 
-            roles.remove(deletedRole.getId());
+        funRoles.remove(deletedRole.getId());
 
-            Bot.getGuildConfig(guild).setFunRoles(roles);
-        }
+        Bot.getGuildConfig(guild).setFunRoles(funRoles);
+
 
         //Muted role
-        {
-            Role oldRole = Bot.getGuildConfig(guild).getMuted(guild);
-            Role deletedRole = event.getRole();
+        Role oldMuteRole = Bot.getGuildConfig(guild).getMuted(guild);
 
-            if (oldRole != null && oldRole.getIdLong() == deletedRole.getIdLong()) {
-                Bot.getGuildConfig(guild).setMuted(null);
-            }
+        if (oldMuteRole != null && oldMuteRole.getIdLong() == deletedRole.getIdLong()) {
+            Bot.getGuildConfig(guild).setMuted(null);
         }
+
 
         //Giveaway role
-        {
-            Role oldRole = Bot.getGuildConfig(guild).getGiveaway(guild);
-            Role deletedRole = event.getRole();
+        Role oldGiveawayRole = Bot.getGuildConfig(guild).getGiveaway(guild);
 
-            if (oldRole != null && oldRole.getIdLong() == deletedRole.getIdLong()) {
-                Bot.getGuildConfig(guild).setGiveaway(null);
-            }
+        if (oldGiveawayRole != null && oldGiveawayRole.getIdLong() == deletedRole.getIdLong()) {
+            Bot.getGuildConfig(guild).setGiveaway(null);
         }
 
-        //Poll role
-        {
-            Role oldRole = Bot.getGuildConfig(guild).getPoll(guild);
-            Role deletedRole = event.getRole();
 
-            if (oldRole != null && oldRole.getIdLong() == deletedRole.getIdLong()) {
-                Bot.getGuildConfig(guild).setPoll(null);
-            }
+        //Poll role
+        Role oldPollRole = Bot.getGuildConfig(guild).getPoll(guild);
+
+        if (oldPollRole != null && oldPollRole.getIdLong() == deletedRole.getIdLong()) {
+            Bot.getGuildConfig(guild).setPoll(null);
         }
     }
 
@@ -176,28 +168,26 @@ public class MiscEventListener extends ListenerAdapter {
         Guild guild = event.getGuild();
 
         //Welcome channel
-        {
-            TextChannel channel = Bot.getGuildConfig(guild).getWelcome(guild);
-            Channel deletedChannel = event.getChannel();
+        TextChannel channel = Bot.getGuildConfig(guild).getWelcome(guild);
+        Channel deletedChannel = event.getChannel();
 
-            if (channel != null && channel.getIdLong() == deletedChannel.getIdLong()) {
-                Bot.getGuildConfig(guild).setWelcome(null);
-            }
+        if (channel != null && channel.getIdLong() == deletedChannel.getIdLong()) {
+            Bot.getGuildConfig(guild).setWelcome(null);
         }
+
     }
 
     @Override
     public void onGuildInviteDelete(@NotNull GuildInviteDeleteEvent event) {
         Guild guild = event.getGuild();
 
-        {
-            String invite = Bot.getGuildConfig(guild).getInvite();
-            String deletedInvite = event.getUrl();
+        String invite = Bot.getGuildConfig(guild).getInvite();
+        String deletedInvite = event.getUrl();
 
-            if (invite != null && invite.equals(deletedInvite)) {
-                Bot.getGuildConfig(guild).setInvite(null);
-            }
+        if (invite != null && invite.equals(deletedInvite)) {
+            Bot.getGuildConfig(guild).setInvite(null);
         }
+
     }
 
     @Override
@@ -235,7 +225,6 @@ public class MiscEventListener extends ListenerAdapter {
     public void onMessageDelete(@NotNull MessageDeleteEvent event) {
 
         //Make sure to update the giveaway list
-        Guild guild = event.getGuild();
         long id = event.getMessageIdLong();
 
         Bot.getGiveawayManager().removeGiveaway(id);
@@ -246,6 +235,10 @@ public class MiscEventListener extends ListenerAdapter {
     public void onReady(@NotNull ReadyEvent event) {
         Bot.getGiveawayManager().resumeActiveGiveaways();
         Bot.getMuteManager().resumeActiveMutes();
+
+        if (event.getGuildTotalCount() == 0) {
+            LoggerFactory.getLogger("Bot").info("Bot is not in any guilds! Invite the bot using {}", OtherUtil.getRawOauthInvite());
+        }
     }
 
     @Override public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event) {

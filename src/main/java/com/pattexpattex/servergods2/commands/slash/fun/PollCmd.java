@@ -2,7 +2,7 @@ package com.pattexpattex.servergods2.commands.slash.fun;
 
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -35,7 +35,7 @@ public class PollCmd extends BotSlash {
         if (event.getOption("option-4") != null) options.add(Objects.requireNonNull(event.getOption("option-4")).getAsString());
         if (event.getOption("option-5") != null) options.add(Objects.requireNonNull(event.getOption("option-5")).getAsString());
 
-        event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Created a new poll").build()).complete();
+        event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Created a new poll").build()).complete();
 
         new Poll(event, question, options).start();
     }

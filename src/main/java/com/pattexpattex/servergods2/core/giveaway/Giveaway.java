@@ -1,7 +1,7 @@
 package com.pattexpattex.servergods2.core.giveaway;
 
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import com.pattexpattex.servergods2.util.OtherUtil;
 import net.dv8tion.jda.api.entities.*;
@@ -78,7 +78,7 @@ public class Giveaway extends Thread {
         log.info("Starting giveaway with id {}", id);
 
         try {
-            message.editMessage(mention + "\n\n\uD83C\uDF89 **GIVEAWAY** \uD83C\uDF89").complete();
+            message.editMessage(mention + "\n\n" + Emotes.TADA + " **GIVEAWAY** " + Emotes.TADA).complete();
             message.editMessageEmbeds(FormatUtil.runningGiveawayEmbed(winners, end, reward, host).build()).queue();
         }
         catch (RuntimeException e) {
@@ -123,14 +123,14 @@ public class Giveaway extends Thread {
                 winnersList.forEach((user) -> sb.append(user.getAsMention()).append(" "));
 
                 MessageAction temp = message.getChannel()
-                        .sendMessage(BotEmoji.MENTION + sb + "\n" + BotEmoji.MENTION + host.getAsMention())
+                        .sendMessage(Emotes.BELL + sb + "\n" + Emotes.BELL + host.getAsMention())
                         .setActionRows(FormatUtil.jumpButton(message));
 
                 if (reroll) {
                     temp.setEmbeds(FormatUtil.rerollGiveawayEmbed(id, sb.toString(), host, reward).build()).queue();
                 }
                 else {
-                    message.editMessage("\uD83C\uDF89 **GIVEAWAY ENDED** \uD83C\uDF89")
+                    message.editMessage(Emotes.TADA + " **GIVEAWAY ENDED** " + Emotes.TADA)
                             .setEmbeds(FormatUtil.endedGiveawayEmbed(id, sb.toString(), host, reward).build()).queue();
 
                     temp.setEmbeds(FormatUtil.endedGiveawayEmbed(id, sb.toString(), host, reward).build()).queue();
@@ -139,14 +139,14 @@ public class Giveaway extends Thread {
             }
             else {
                 MessageAction temp = message.getChannel()
-                        .sendMessage(BotEmoji.MENTION + mention + "\n" + BotEmoji.MENTION + host.getAsMention())
+                        .sendMessage(Emotes.BELL + mention + "\n" + Emotes.BELL + host.getAsMention())
                         .setActionRows(FormatUtil.jumpButton(message));
 
                 if (reroll) {
                     temp.setEmbeds(FormatUtil.noWinnersGiveawayEmbed(id, reward).build()).queue();
                 }
                 else {
-                    message.editMessage("\uD83C\uDF89 **GIVEAWAY ENDED** \uD83C\uDF89")
+                    message.editMessage(Emotes.TADA + " **GIVEAWAY ENDED** " + Emotes.TADA)
                             .setEmbeds(FormatUtil.noWinnersGiveawayEmbed(id, reward).build()).queue();
 
                     temp.setEmbeds(FormatUtil.noWinnersGiveawayEmbed(id, reward).build()).queue();

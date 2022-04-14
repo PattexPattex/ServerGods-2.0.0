@@ -44,6 +44,10 @@ public abstract class BotButton implements Button {
         return "";
     }
 
+    public boolean isDisabled() {
+        return false;
+    }
+
     public final @Nonnull DataObject toData() {
         DataObject json = DataObject.empty();
         json.put("type", 2);
@@ -56,9 +60,5 @@ public abstract class BotButton implements Button {
         else
             json.put("custom_id", getId());
         return json;
-    }
-
-    public final boolean isDisabled() {
-        return false;
     }
 }

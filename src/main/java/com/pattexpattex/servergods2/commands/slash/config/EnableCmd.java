@@ -4,7 +4,7 @@ import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
 import com.pattexpattex.servergods2.core.listeners.SlashEventListener;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -47,7 +47,7 @@ public class EnableCmd extends BotSlash {
 
             if (guildCmdList.contains(cmdOption)) {
                 guildCmdList.remove(cmdOption);
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Disabled the `" + cmdOption + "` command!").build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Disabled the `" + cmdOption + "` command!").build()).queue();
             }
             else throw new BotException("This command is already disabled");
         }
@@ -56,7 +56,7 @@ public class EnableCmd extends BotSlash {
         else {
             if (!guildCmdList.contains(cmdOption)) {
                 guildCmdList.add(cmdOption);
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Enabled the `" + cmdOption + "` command!").build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Enabled the `" + cmdOption + "` command!").build()).queue();
             }
             else throw new BotException("This command is already enabled");
         }

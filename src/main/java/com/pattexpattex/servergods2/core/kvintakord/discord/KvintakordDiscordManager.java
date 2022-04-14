@@ -4,7 +4,7 @@ import com.pattexpattex.servergods2.commands.button.music.*;
 import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
 import com.pattexpattex.servergods2.core.kvintakord.listener.AudioEventDispatcher;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
@@ -113,7 +113,7 @@ public class KvintakordDiscordManager {
             return true;
         }
         else if (message != null && !kvintakord.isPlaying(guild)) {
-            message.editMessageEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Playback ended").build()).setActionRows(Collections.emptyList()).queue();
+            message.editMessageEmbeds(FormatUtil.kvintakordEmbed(Emotes.YES + " Playback ended").build()).setActionRows(Collections.emptyList()).queue();
 
             removeLastQueueMessage(guild);
             return true;

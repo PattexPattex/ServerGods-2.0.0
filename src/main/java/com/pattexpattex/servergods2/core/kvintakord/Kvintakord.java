@@ -8,13 +8,11 @@ import com.pattexpattex.servergods2.core.kvintakord.discord.AloneInVoiceHandler;
 import com.pattexpattex.servergods2.core.kvintakord.discord.KvintakordDiscordManager;
 import com.pattexpattex.servergods2.core.kvintakord.listener.AudioEventDispatcher;
 import com.pattexpattex.servergods2.core.kvintakord.spotify.SpotifyManger;
-import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
-import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.entities.AudioChannel;
 import net.dv8tion.jda.api.entities.Guild;
@@ -33,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 
 /**
  * Everything music related.
@@ -104,96 +103,53 @@ public class Kvintakord {
         String id = identifier;
 
         if (spotifyManger.isSpotifyInUrl(identifier)) {
-            if (identifier.startsWith("https://open.spotify.com/track/")) {
-                spotifyTrack = spotifyManger.getTrack(identifier);
+            Matcher matcher = SpotifyManger.URL_PATTERN.matcher(identifier);
 
-                id = "ytsearch: " + spotifyTrack.getArtists()[0].getName() + " " + spotifyTrack.getName();
-            } else if (identifier.startsWith("https://open.spotify.com/playlist/")) {
-                Paging<PlaylistTrack> spotifyPlaylist = spotifyManger.getPlaylistTracks(identifier);
+            //Should never be true because it was already checked in SpotifyManager#isSpotifyInUrl
+            if (!matcher.find()) throw new IllegalArgumentException("Unknown Spotify URL");
 
-                for (PlaylistTrack playlistTrack : spotifyPlaylist.getItems()) {
-                    loadAndPlay(channel, "https://open.spotify.com/track/" + spotifyManger.getIdFromUrl(playlistTrack.getTrack().getExternalUrls().get("spotify")));
+            switch (matcher.group(2)) {
+                case "track" -> {
+                    spotifyTrack = spotifyManger.getTrack(identifier);
+
+                    id = "ytsearch: " + spotifyTrack.getArtists()[0].getName() + " " + spotifyTrack.getName();
                 }
+                case "artist" -> {
+                    Track[] spotifyTracks = spotifyManger.getArtistTracks(identifier);
 
-                return;
-            } else if (identifier.startsWith("https://open.spotify.com/artist/")) {
-                Track[] spotifyTracks = spotifyManger.getArtistTracks(identifier);
+                    for (Track track : spotifyTracks) {
+                        loadAndPlay(channel, track.getExternalUrls().get("spotify"));
+                    }
 
-                for (Track track : spotifyTracks) {
-                    loadAndPlay(channel, track.getExternalUrls().get("spotify"));
+                    return;
                 }
+                case "playlist" -> {
+                    Paging<PlaylistTrack> spotifyPlaylist = spotifyManger.getPlaylistTracks(identifier);
 
-                return;
-            } else if (identifier.startsWith("https://open.spotify.com/album")) {
-                Paging<TrackSimplified> spotifyTracks = spotifyManger.getAlbumTracks(identifier);
+                    for (PlaylistTrack playlistTrack : spotifyPlaylist.getItems()) {
+                        loadAndPlay(channel, "https://open.spotify.com/track/" + spotifyManger.getIdFromUrl(playlistTrack.getTrack().getExternalUrls().get("spotify")));
+                    }
 
-                for (TrackSimplified trackSimplified : spotifyTracks.getItems()) {
-                    loadAndPlay(channel, trackSimplified.getExternalUrls().get("spotify"));
+                    return;
                 }
+                case "album" -> {
+                    Paging<TrackSimplified> spotifyTracks = spotifyManger.getAlbumTracks(identifier);
 
-                return;
+                    for (TrackSimplified trackSimplified : spotifyTracks.getItems()) {
+                        loadAndPlay(channel, trackSimplified.getExternalUrls().get("spotify"));
+                    }
+
+                    return;
+                }
+                default -> throw new IllegalArgumentException("Unknown Spotify URL");
             }
         }
 
-        if (identifier.startsWith("https://open.spotify.com/") && spotifyManger.notUseSpotify()) {
-            throw new UnsupportedOperationException("Spotify is not supported");
-        }
-        else if (identifier.startsWith("https://soundcloud.com/")) {
-            throw new UnsupportedOperationException("Soundcloud is not supported");
-        }
         else if (!identifier.startsWith("C:\\\\") && !identifier.startsWith("https://") && !identifier.startsWith("http://")) {
             id = "ytsearch: " + identifier;
         }
 
-        Track finalSpotifyTrack = spotifyTrack;
-        playerManager.loadItemOrdered(musicManager, id, new AudioLoadResultHandler() {
-
-            @Override public void trackLoaded(AudioTrack track) {
-                if (finalSpotifyTrack != null) {
-                    track.setUserData(new TrackMetadata(finalSpotifyTrack));
-                }
-                else {
-                    track.setUserData(new TrackMetadata(track));
-                }
-
-                if (playFirst) {
-                    playFirst(channel, musicManager, track);
-                }
-                else {
-                    play(channel, musicManager, track);
-                }
-
-                AudioEventDispatcher.onTrackLoad(channel.getGuild(), track);
-            }
-
-            @Override public void playlistLoaded(AudioPlaylist playlist) {
-
-                if (!playlist.isSearchResult()) {
-                    for (AudioTrack track : playlist.getTracks()) {
-                        if (track != null) {
-                            loadAndPlay(channel, track.getInfo().uri, false);
-                        }
-                    }
-                }
-                else {
-                    AudioTrack firstTrack = playlist.getSelectedTrack();
-
-                    if (firstTrack == null) {
-                        firstTrack = playlist.getTracks().get(0);
-                    }
-
-                    trackLoaded(firstTrack);
-                }
-            }
-
-            @Override public void noMatches() {
-                AudioEventDispatcher.onTrackNoMatches(channel.getGuild(), identifier);
-            }
-
-            @Override public void loadFailed(FriendlyException exception) {
-                AudioEventDispatcher.onTrackLoadFail(channel.getGuild(), exception);
-            }
-        });
+        playerManager.loadItemOrdered(musicManager, id, new LoadHandler(channel, musicManager, spotifyTrack, identifier, playFirst, this));
     }
 
     public void loadAndPlay(AudioChannel channel, String identifier) {
@@ -366,9 +322,20 @@ public class Kvintakord {
      * @implNote Loop mode {@code ALL} is superior to {@code SINGLE}
      */
     public enum LoopMode {
-        OFF,
-        ALL,
-        SINGLE
+
+        OFF(Emotes.NO_LOOP),
+        ALL(Emotes.LOOP),
+        SINGLE(Emotes.SINGLE_LOOP);
+
+        private final String emote;
+
+        LoopMode(String emote) {
+            this.emote = emote;
+        }
+
+        public String emote() {
+            return emote;
+        }
     }
 
     public LoopMode getLoop(Guild guild) {
@@ -404,8 +371,8 @@ public class Kvintakord {
     }
 
     //Lyrics
-    public synchronized @Nullable Lyrics lyricsFor(String name) throws Exception {
-        return lyricsClient.getLyrics(name).get();
+    public @Nullable Lyrics lyricsFor(String name) {
+        return lyricsClient.getLyrics(name).join();
     }
 
     public SpotifyManger getSpotifyManger() {

@@ -36,9 +36,9 @@ public class HiddenEventListener extends ListenerAdapter {
 
         //Registers the commands
         cmdList.put("stop", new StopCmd());
-        cmdList.put("clear", new ClearCmd());
-        cmdList.put("get", new GetCmd());
-        cmdList.put("test", new TestCmd());
+        //cmdList.put("clear", new ClearCmd());
+        //cmdList.put("get", new GetCmd());
+        //cmdList.put("test", new TestCmd());
 
         //Eval command
         if (Bot.getConfig().enabledEval()) cmdList.put("eval", new EvalCmd());

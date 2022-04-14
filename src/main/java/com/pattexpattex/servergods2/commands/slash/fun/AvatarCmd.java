@@ -13,7 +13,7 @@ import java.util.Objects;
 public class AvatarCmd extends BotSlash {
 
     @Override
-    public void run(@NotNull SlashCommandEvent event) throws Exception {
+    public void run(@NotNull SlashCommandEvent event) {
         event.deferReply().queue();
 
         User user = event.getOption("user") != null ? Objects.requireNonNull(event.getOption("user")).getAsUser() : event.getUser();

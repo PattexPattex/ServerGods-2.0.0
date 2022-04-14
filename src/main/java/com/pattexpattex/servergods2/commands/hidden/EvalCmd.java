@@ -2,7 +2,7 @@ package com.pattexpattex.servergods2.commands.hidden;
 
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotHidden;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.RestAction;
@@ -150,21 +150,21 @@ public class EvalCmd extends BotHidden {
 
     private void parseEvalResponse(MessageReceivedEvent event, Object response) {
         if (response == null) {
-            event.getChannel().sendMessage(BotEmoji.YES + " Success").queue();
+            event.getChannel().sendMessage(Emotes.YES + " Success").queue();
         }
         else if (response instanceof Throwable t) {
-            MessageAction action = event.getChannel().sendMessage(BotEmoji.NO + " Failed");
+            MessageAction action = event.getChannel().sendMessage(Emotes.WARNING + " Failed");
             attachStackTrace(action, t).queue();
         }
         else if (response instanceof RestAction<?> ra) {
-            ra.queue((s) -> event.getChannel().sendMessage(BotEmoji.YES + " Rest action success: ```" + s + "```").queue(),
+            ra.queue((s) -> event.getChannel().sendMessage(Emotes.YES + " Rest action success: ```" + s + "```").queue(),
                     (f) -> {
-                MessageAction action = event.getChannel().sendMessage(BotEmoji.NO + " Rest action fail");
+                MessageAction action = event.getChannel().sendMessage(Emotes.WARNING + " Rest action fail");
                 attachStackTrace(action, f).queue();
             });
         }
         else {
-            event.getChannel().sendMessage(BotEmoji.YES + " Success: ```" + response + "```").queue();
+            event.getChannel().sendMessage(Emotes.YES + " Success: ```" + response + "```").queue();
         }
     }
 
@@ -173,7 +173,7 @@ public class EvalCmd extends BotHidden {
         PrintWriter pw = new PrintWriter(sw);
 
         t.printStackTrace(pw);
-        action.append("\n```" + sw + "```");
+        action.append("\n```").append(String.valueOf(sw)).append("```");
 
         return action;
     }

@@ -16,7 +16,7 @@ import java.util.Objects;
 public abstract class BotSelection implements SelectionMenu {
 
     //Options in the selection
-    List<SelectOption> list = new ArrayList<>();
+    final List<SelectOption> list = new ArrayList<>();
 
     //Basically builds a SelectionMenu
     public final SelectionMenu setup(List<SelectOption> options, @Nullable List<SelectOption> defaultOptions) {

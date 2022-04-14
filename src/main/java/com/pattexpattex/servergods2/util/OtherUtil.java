@@ -21,6 +21,8 @@ public class OtherUtil {
 
     private static final Logger log = LoggerFactory.getLogger(OtherUtil.class);
 
+    private static final String PRIVATE_BOT_NOTICE = "https://github.com/PattexPattex/ServerGods-2.0.0/blob/master/OAUTH.md";
+
     private OtherUtil() {}
 
     public static Path getPath(String path) {
@@ -61,12 +63,29 @@ public class OtherUtil {
         try {
             ApplicationInfo info = Bot.getJDA().retrieveApplicationInfo().complete();
             info.setRequiredScopes("bot", "applications.commands");
-            oauthLink = info.isBotPublic() ? info.getInviteUrl(Bot.getRecommendedPermissions()) : "https://github.com/PattexPattex/ServerGods";
+            oauthLink = info.isBotPublic() ? info.getInviteUrl(Bot.getRecommendedPermissions()) : PRIVATE_BOT_NOTICE;
 
         }
         catch (Exception e) {
-            LoggerFactory.getLogger(OtherUtil.class).error("Could not generate OAuth2 invite link", e);
-            oauthLink = "https://github.com/PattexPattex/ServerGods";
+            LoggerFactory.getLogger(OtherUtil.class).error("Could not generate OAuth2 invite URL", e);
+            oauthLink = "https://github.com/PattexPattex/ServerGods-2.0.0";
+        }
+
+        return oauthLink;
+    }
+
+    public static String getRawOauthInvite() {
+        String oauthLink;
+
+        try {
+            ApplicationInfo info = Bot.getJDA().retrieveApplicationInfo().complete();
+            info.setRequiredScopes("bot", "applications.commands");
+            oauthLink = info.getInviteUrl(Bot.getRecommendedPermissions());
+
+        }
+        catch (Exception e) {
+            LoggerFactory.getLogger(OtherUtil.class).error("Could not generate OAuth2 invite URL", e);
+            oauthLink = "https://github.com/PattexPattex/ServerGods-2.0.0";
         }
 
         return oauthLink;
@@ -75,7 +94,7 @@ public class OtherUtil {
     public static Button getInviteButton() {
         String link = getOauthInvite();
 
-        return Button.link(getOauthInvite(), "Invite me to your server").withEmoji(Emoji.fromEmote("discord", 934441038192476260L, false)).withDisabled(link.equals("https://github.com/PattexPattex/ServerGods"));
+        return Button.link(getOauthInvite(), "Invite me to your server").withEmoji(Emoji.fromEmote("discord", 934441038192476260L, false)).withDisabled(link.equals(PRIVATE_BOT_NOTICE));
     }
 
     @Contract(value = "null -> null", pure = true)

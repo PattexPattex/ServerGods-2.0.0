@@ -3,7 +3,7 @@ package com.pattexpattex.servergods2.commands.slash.fun;
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -41,7 +41,7 @@ public class InviteCmd extends BotSlash {
 
                 String invite = channel.createInvite().setMaxAge(maxAgeRaw).setMaxUses(maxUse).complete().getUrl();
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " *This invite is valid for `" + FormatUtil.formatTimeAlternate(maxAgeRaw) + "` and has a max use of `" + maxUse + "`*").setTitle(invite, invite).build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " *This invite is valid for `" + FormatUtil.formatTimeAlternate(maxAgeRaw) + "` and has a max use of `" + maxUse + "`*").setTitle(invite, invite).build()).queue();
             }
             case "invite/permanent/refresh", "invite/permanent/clear" -> {
                 if (!member.hasPermission(Permission.MANAGE_SERVER)) {
@@ -59,7 +59,7 @@ public class InviteCmd extends BotSlash {
                     String invite = channel.createInvite().setMaxUses(0).setMaxAge(0).complete().getUrl();
                     Bot.getGuildConfig(guild).setInvite(invite);
 
-                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " *This is the new permanent invite*").setTitle(invite, invite).build()).queue();
+                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " *This is the new permanent invite*").setTitle(invite, invite).build()).queue();
                 }
                 else {
                     String invite = Bot.getGuildConfig(guild).getInvite();
@@ -70,7 +70,7 @@ public class InviteCmd extends BotSlash {
                     else {
                         Bot.getGuildConfig(guild).setInvite(null);
 
-                        event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Deleted the permanent invite").build()).queue();
+                        event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Deleted the permanent invite").build()).queue();
                     }
                 }
             }
@@ -82,7 +82,7 @@ public class InviteCmd extends BotSlash {
                     Bot.getGuildConfig(guild).setInvite(invite);
                 }
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " *This is the current permanent invite*").setTitle(invite, invite).build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " *This is the current permanent invite*").setTitle(invite, invite).build()).queue();
             }
         }
     }

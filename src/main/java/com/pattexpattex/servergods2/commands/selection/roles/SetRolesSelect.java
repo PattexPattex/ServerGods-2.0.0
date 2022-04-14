@@ -3,7 +3,7 @@ package com.pattexpattex.servergods2.commands.selection.roles;
 import com.pattexpattex.servergods2.commands.selection.DisabledSelect;
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotSelection;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.events.interaction.SelectionMenuEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
@@ -26,7 +26,7 @@ public class SetRolesSelect extends BotSelection {
 
         Bot.getGuildConfig(event.getGuild()).setFunRoles(selectedRolesId);
 
-        event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.SETTINGS + " Set the cosmetic roles").build()).queue();
+        event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.GEAR + " Set the cosmetic roles").build()).queue();
 
         event.getHook().editOriginalComponents(ActionRow.of(new DisabledSelect())).queue();
     }

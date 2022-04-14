@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 public class TestCmd extends BotHidden {
 
     @Override
-    public void run(@NotNull MessageReceivedEvent event, @NotNull String[] args) throws Exception {
-        event.getChannel().sendMessage("test?").queue();
+    public void run(@NotNull MessageReceivedEvent event, @NotNull String[] args) {
+        event.getChannel().sendMessage("test? no").queue();
     }
 }

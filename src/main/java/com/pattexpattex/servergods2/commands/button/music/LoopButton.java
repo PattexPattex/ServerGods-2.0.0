@@ -3,9 +3,8 @@ package com.pattexpattex.servergods2.commands.button.music;
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotButton;
 import com.pattexpattex.servergods2.core.kvintakord.Kvintakord;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
-import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.interactions.components.ButtonStyle;
@@ -26,7 +25,7 @@ public class LoopButton extends BotButton {
         event.deferEdit().queue();
 
         if (Bot.getKvintakord().getDiscordManager().isNotLastQueueMessage(guild, event.getMessage()) || !Bot.getKvintakord().isPlaying(guild)) {
-            event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).setActionRows(Collections.emptyList()).queue();
+            event.getHook().editOriginalEmbeds(FormatUtil.kvintakordEmbed(Emotes.YES + " Interaction ended").build()).setActionRows(Collections.emptyList()).queue();
             return;
         }
 
@@ -47,8 +46,8 @@ public class LoopButton extends BotButton {
     }
 
     @Override
-    public @Nullable Emoji getEmoji() {
-        return Emoji.fromUnicode("\uD83D\uDD01");
+    public @Nullable net.dv8tion.jda.api.entities.Emoji getEmoji() {
+        return net.dv8tion.jda.api.entities.Emoji.fromUnicode("\uD83D\uDD01");
     }
 
     @Nullable

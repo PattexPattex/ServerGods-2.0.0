@@ -3,7 +3,7 @@ package com.pattexpattex.servergods2.commands.slash.fun;
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
 import com.pattexpattex.servergods2.core.exceptions.BotException;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import com.sedmelluq.discord.lavaplayer.track.TrackMarker;
 import net.dv8tion.jda.api.entities.AudioChannel;
@@ -37,10 +37,10 @@ public class RickrollCmd extends BotSlash {
                 Bot.getKvintakord().loadAndPlay(audioChannel, "https://www.youtube.com/watch?v=dQw4w9WgXcQ", true);
 
                 if (member == event.getMember()) {
-                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Rickrolled " + audioChannel.getAsMention()).build()).queue(null, this::rethrow);
+                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Rickrolled " + audioChannel.getAsMention()).build()).queue(null, this::rethrow);
                 }
                 else {
-                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Rickrolled " + member.getAsMention() + " in " + audioChannel.getAsMention()).build()).queue(null, this::rethrow);
+                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Rickrolled " + member.getAsMention() + " in " + audioChannel.getAsMention()).build()).queue(null, this::rethrow);
                 }
 
                 new Thread(() -> {
@@ -59,7 +59,7 @@ public class RickrollCmd extends BotSlash {
 
                     Bot.getKvintakord().skipToTrack(0, guild);
 
-                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Stopped rickrolling in " + channel.getAsMention()).build()).queue(null, this::rethrow);
+                    event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Stopped rickrolling in " + channel.getAsMention()).build()).queue(null, this::rethrow);
                 }
             }
         }

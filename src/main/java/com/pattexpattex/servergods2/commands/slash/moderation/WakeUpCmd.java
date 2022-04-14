@@ -2,7 +2,7 @@ package com.pattexpattex.servergods2.commands.slash.moderation;
 
 import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.AudioChannel;
@@ -48,14 +48,14 @@ public class WakeUpCmd extends BotSlash {
             throw new BotException("No second voice channel found");
         }
 
-        event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.VOICE + " Moving " + mention + " around a bit").build()).queue();
+        event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.MICROPHONE + " Moving " + mention + " around a bit").build()).queue();
 
         for (int i = 0; i < 5; i++) {
             guild.moveVoiceMember(moveMember, moveChannel).completeAfter(500L, TimeUnit.MILLISECONDS);
             guild.moveVoiceMember(moveMember, currentChannel).completeAfter(500L, TimeUnit.MILLISECONDS);
         }
 
-        event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Moved " + mention + " around a bit and you can do it again, if you want, of course").build()).queue();
+        event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Moved " + mention + " around a bit and you can do it again, if you want, of course").build()).queue();
     }
 
     public String getName() {

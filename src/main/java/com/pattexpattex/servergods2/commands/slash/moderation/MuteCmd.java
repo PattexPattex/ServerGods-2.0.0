@@ -5,7 +5,7 @@ import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
 import com.pattexpattex.servergods2.core.mute.Mute;
 import com.pattexpattex.servergods2.core.mute.MuteManager;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -42,8 +42,6 @@ public class MuteCmd extends BotSlash {
                 String reason = event.getOption("reason") != null ? Objects.requireNonNull(event.getOption("reason")).getAsString() : null;
                 int timeRaw = (int) FormatUtil.decodeTimeAlternate(time);
 
-                Role role = MuteManager.updateMutedRole(guild);
-
                 if (member.getUser() == Bot.getJDA().getSelfUser()) {
                     throw new BotException("You can't mute me");
                 }
@@ -56,11 +54,11 @@ public class MuteCmd extends BotSlash {
                 long end = start + timeRaw;
 
                 event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(
-                        BotEmoji.YES + " Muted " + mention +
+                        Emotes.YES + " Muted " + mention +
                                 (reason == null ? "" : " with reason `" + reason + "`") +
                                 (timeRaw < 0 ? "" : ", mute ends " + FormatUtil.epochTimestampRelative(end))).build())
                         .queue((msg) -> {
-                            Mute mute = new Mute(manager, member.getIdLong(), mod.getIdLong(), guild.getIdLong(), start, end, reason);
+                            Mute mute = new Mute(manager, member.getIdLong(), Objects.requireNonNull(mod).getIdLong(), guild.getIdLong(), start, end, reason);
                             mute.start();
                         });
             }
@@ -85,14 +83,14 @@ public class MuteCmd extends BotSlash {
                     mute.end();
                 }
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Unmuted " + mention).build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Unmuted " + mention).build()).queue();
             }
             case "mute/get" -> {
                 event.deferReply().queue();
 
                 Member member = Objects.requireNonNull(event.getOption("member")).getAsMember();
 
-                Mute mute = manager.getMute(member.getIdLong());
+                Mute mute = manager.getMute(Objects.requireNonNull(member).getIdLong());
                 Role role = MuteManager.updateMutedRole(guild);
 
 
@@ -106,7 +104,7 @@ public class MuteCmd extends BotSlash {
 
                 event.getHook().editOriginalEmbeds(
                         FormatUtil.defaultEmbed(
-                                "Muted by " + guild.getMemberById(mute.moderator).getAsMention() +
+                                "Muted by " + Objects.requireNonNull(guild.getMemberById(mute.moderator)).getAsMention() +
                                         (mute.reason == null ? "" : "\nWith reason `" + mute.reason + "`") +
                                         "\nOn " + FormatUtil.epochTimestamp(mute.start) +
                                         (mute.infinite ? "" : "\nMute ends " + FormatUtil.epochTimestampRelative(mute.end)), "Mute info for " + member.getEffectiveName()).build()).queue();
@@ -135,8 +133,8 @@ public class MuteCmd extends BotSlash {
                     i++;
 
                     builder.appendDescription(
-                            "**" + i + ".** " + guild.getMemberById(mute.id).getAsMention() +
-                                    " by " + guild.getMemberById(mute.moderator).getAsMention() +
+                            "**" + i + ".** " + Objects.requireNonNull(guild.getMemberById(mute.id)).getAsMention() +
+                                    " by " + Objects.requireNonNull(guild.getMemberById(mute.moderator)).getAsMention() +
                                     (mute.reason == null ? "" : " with reason `" + mute.reason + "`") +
                                     " on " + FormatUtil.epochTimestamp(mute.start) +
                                     (mute.infinite ? "" : ", ends " + FormatUtil.epochTimestampRelative(mute.end)) + "\n");

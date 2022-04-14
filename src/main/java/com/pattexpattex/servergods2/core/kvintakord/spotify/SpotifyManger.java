@@ -30,7 +30,7 @@ public class SpotifyManger {
     private static final Logger log = LoggerFactory.getLogger(SpotifyManger.class);
 
     private static final Pattern AUTH_PATTERN = Pattern.compile("[a-z0-9]{32}");
-    private static final Pattern URL_PATTERN = Pattern.compile("^(?:https?://(?:open\\.)?spotify\\.com|spotify)([/:])(track|artist|playlist|album)\\1([a-zA-Z0-9]+)");
+    public static final Pattern URL_PATTERN = Pattern.compile("^(?:https?://(?:open\\.)?spotify\\.com|spotify)([/:])(track|artist|playlist|album)\\1([a-zA-Z0-9]+)");
 
     private static final String MUST_CREATE_SPOTIFY_APP = "You must create a new Spotify Web API application and paste its ";
     private static final String AUTH_MORE_INFO = "For more info, see https://developer.spotify.com/documentation/general/guides/authorization/app-settings/";
@@ -136,7 +136,7 @@ public class SpotifyManger {
     public String getIdFromUrl(String url) {
         Matcher matcher = URL_PATTERN.matcher(url);
 
-        if (!matcher.find()) throw new SpotifyException(String.format("Url \"%s\" is not a valid Spotify url", url));
+        if (!matcher.find()) throw new SpotifyException(String.format("Url \"%s\" is not a valid Spotify URL", url));
 
         return matcher.group(3);
     }

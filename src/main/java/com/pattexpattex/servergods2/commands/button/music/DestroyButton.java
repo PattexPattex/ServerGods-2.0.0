@@ -2,7 +2,7 @@ package com.pattexpattex.servergods2.commands.button.music;
 
 import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.core.commands.BotButton;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
@@ -24,7 +24,7 @@ public class DestroyButton extends BotButton {
 
         Bot.getKvintakord().getDiscordManager().removeLastQueueMessage(guild);
 
-        event.getHook().editOriginalComponents(Collections.emptyList()).setEmbeds(FormatUtil.kvintakordEmbed(BotEmoji.YES + " Interaction ended").build()).queue();
+        event.getHook().editOriginalComponents(Collections.emptyList()).setEmbeds(FormatUtil.kvintakordEmbed(Emotes.YES + " Interaction ended").build()).queue();
     }
 
     @Override

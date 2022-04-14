@@ -1,7 +1,7 @@
 package com.pattexpattex.servergods2.commands.slash.fun;
 
 import com.pattexpattex.servergods2.core.commands.BotSlash;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
@@ -20,7 +20,7 @@ import java.util.Objects;
 public class UserCmd extends BotSlash {
 
     @Override
-    public void run(@NotNull SlashCommandEvent event) throws Exception {
+    public void run(@NotNull SlashCommandEvent event) {
         event.deferReply().queue();
 
         Member member = event.getOption("user") != null ? Objects.requireNonNull(event.getOption("user")).getAsMember() : event.getMember();
@@ -43,8 +43,8 @@ public class UserCmd extends BotSlash {
                 .appendDescription("\n\n**User Tag:** " + user.getAsTag())
                 .appendDescription("\n**User Id:** " + user.getId())
                 .appendDescription("\n**Account Created:** " + FormatUtil.epochTimestamp(time.toEpochSecond()) + " (" + FormatUtil.epochTimestampRelative(time.toEpochSecond()) + ")")
-                .appendDescription("\n" + nitroUserLink + (isNitro(user) ? BotEmoji.YES : BotEmoji.NO))
-                .appendDescription("\n**Bot Account:** " + (user.isBot() ? BotEmoji.YES : BotEmoji.NO))
+                .appendDescription("\n" + nitroUserLink + (isNitro(user) ? Emotes.YES : Emotes.WARNING))
+                .appendDescription("\n**Bot Account:** " + (user.isBot() ? Emotes.YES : Emotes.WARNING))
                 .appendDescription("\n\n_Use `/avatar <user>` to get a user's avatar_")
                 .build();
 
@@ -75,9 +75,9 @@ public class UserCmd extends BotSlash {
                 .appendDescription("\n**Joined Server:** " + FormatUtil.epochTimestamp(memberTime.toEpochSecond()) + " (" + FormatUtil.epochTimestampRelative(memberTime.toEpochSecond()) + ")")
                 .appendDescription("\n**Join Position:** " + getJoinPosition(loadedMembers, member))
                 .appendDescription("\n**Join Order:** " + generateJoinOrder(loadedMembers, member))
-                .appendDescription("\n" + nitroUserLink + (isNitro(user) ? BotEmoji.YES : BotEmoji.NO))
+                .appendDescription("\n" + nitroUserLink + (isNitro(user) ? Emotes.YES : Emotes.WARNING))
                 .appendDescription("\n**Boosting Since:** " + boostingSince)
-                .appendDescription("\n**Bot Account:** " + (user.isBot() ? BotEmoji.YES : BotEmoji.NO))
+                .appendDescription("\n**Bot Account:** " + (user.isBot() ? Emotes.YES : Emotes.WARNING))
                 .appendDescription("\n\n_Use `/avatar <user>` to get a user's avatar_").build();
 
         event.getHook().editOriginalEmbeds(embed).queue();

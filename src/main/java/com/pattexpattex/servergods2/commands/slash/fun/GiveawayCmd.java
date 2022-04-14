@@ -5,7 +5,7 @@ import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
 import com.pattexpattex.servergods2.core.giveaway.Giveaway;
 import com.pattexpattex.servergods2.core.giveaway.GiveawayManager;
-import com.pattexpattex.servergods2.util.BotEmoji;
+import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -24,7 +24,7 @@ import java.util.Objects;
 public class GiveawayCmd extends BotSlash {
 
     @Override
-    public void run(@NotNull SlashCommandEvent event) throws Exception {
+    public void run(@NotNull SlashCommandEvent event) {
 
         String subcommand = event.getCommandPath();
         Guild guild = event.getGuild();
@@ -52,18 +52,18 @@ public class GiveawayCmd extends BotSlash {
                 Role role = Bot.getGuildConfig(guild).getGiveaway(guild);
                 String mention = (role != null ? role.getAsMention() : "@everyone");
 
-                event.getChannel().sendMessage(BotEmoji.LOADING + " `Setting up a new giveaway...`\n\n" + mention).queue((msg) ->
+                event.getChannel().sendMessage(Emotes.HOURGLASS + " `Setting up a new giveaway...`\n\n" + mention).queue((msg) ->
                 {
                     msg.addReaction("\uD83C\uDF89").queue();
                     try {
-                        new Giveaway(Bot.getGiveawayManager(), msg.getIdLong(), host.getIdLong(), guild.getIdLong(), reward, winners, end).start();
+                        new Giveaway(Bot.getGiveawayManager(), msg.getIdLong(), host.getIdLong(), Objects.requireNonNull(guild).getIdLong(), reward, winners, end).start();
                     }
                     catch (RuntimeException e) {
                         throw new BotException(e);
                     }
                 });
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Started a giveaway").build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Started a giveaway").build()).queue();
             }
             case "giveaway/reroll" -> {
                 long giveawayId = Objects.requireNonNull(event.getOption("message-id")).getAsLong();
@@ -85,7 +85,7 @@ public class GiveawayCmd extends BotSlash {
                     throw new BotException(e);
                 }
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Rerolled the giveaway").build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Rerolled the giveaway").build()).queue();
             }
             case "giveaway/end" -> {
                 long giveawayId = Objects.requireNonNull(event.getOption("message-id")).getAsLong();
@@ -102,7 +102,7 @@ public class GiveawayCmd extends BotSlash {
                     throw new BotException(e);
                 }
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Ended the giveaway").build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Ended the giveaway").build()).queue();
             }
             case "giveaway/cancel" -> {
                 long giveawayId = Objects.requireNonNull(event.getOption("message-id")).getAsLong();
@@ -114,7 +114,7 @@ public class GiveawayCmd extends BotSlash {
 
                 giveaway.cancel();
 
-                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(BotEmoji.YES + " Cancelled the giveaway").build()).queue();
+                event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Cancelled the giveaway").build()).queue();
             }
             case "giveaway/active" -> {
                 long messageId = event.getOption("message-id") != null ? Objects.requireNonNull(event.getOption("message-id")).getAsLong() : -1;
