@@ -76,14 +76,13 @@ public class Bot {
 
         config = new Config();
         debug = config.enabledDebugInfo();
+        waiter = new EventWaiter(executors, false);
         guildConfigManager = new GuildConfigManager();
-        giveawayManager = new GiveawayManager();
         muteManager = new MuteManager();
         kvintakord = new Kvintakord();
-        waiter = new EventWaiter(executors, false);
 
         try {
-            JDABuilder builder = JDABuilder.createDefault(config.getValue("token"))
+            jda = JDABuilder.createDefault(config.getValue("token"))
                     .enableCache(CacheFlag.VOICE_STATE)
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
                     .enableIntents(GatewayIntent.GUILD_MESSAGES,
@@ -97,16 +96,14 @@ public class Bot {
                             new SelectionEventListener(),
                             new HiddenEventListener(config.getValue("prefix")),
                             new MiscEventListener(),
-                            waiter);
-                    /* NativeAudioSendFactory in JDA-NAS may or may not cause fatal crashes,
-                     * probably because of a memory leak, see https://github.com/sedmelluq/jda-nas/issues/12 */
-                    //builder.setAudioSendFactory(new NativeAudioSendFactory());
-
-            jda = builder.build();
+                            waiter)
+                    .build().awaitReady();
         }
         catch (Exception e) {
             log.error("Caught a flying " + e.getClass().getSimpleName() + " at high speeds", e);
         }
+
+        giveawayManager = new GiveawayManager();
     }
 
     public static void shutdown() {

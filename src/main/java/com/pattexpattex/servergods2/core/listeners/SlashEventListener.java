@@ -9,8 +9,8 @@ import com.pattexpattex.servergods2.commands.slash.moderation.BanCmd;
 import com.pattexpattex.servergods2.commands.slash.moderation.KickCmd;
 import com.pattexpattex.servergods2.commands.slash.moderation.MuteCmd;
 import com.pattexpattex.servergods2.commands.slash.moderation.WakeUpCmd;
-import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import com.pattexpattex.servergods2.util.OtherUtil;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -94,7 +94,7 @@ public class SlashEventListener extends ListenerAdapter {
 
         /* Runs the setup() method in each command,
            here is checked whether a command is enabled in a guild or not */
-        cmdListEnabled.forEach((cmd) -> cmd.setup(cmd));
+        cmdListEnabled.forEach((cmd) -> cmd.setup(cmd, event.getJDA()));
     }
 
     @Override
