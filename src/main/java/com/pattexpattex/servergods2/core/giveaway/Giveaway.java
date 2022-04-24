@@ -4,8 +4,9 @@ import com.pattexpattex.servergods2.core.Bot;
 import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
 import com.pattexpattex.servergods2.util.OtherUtil;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,175 +14,116 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Giveaway extends Thread {
+public class Giveaway {
 
-    protected int winners;
-    protected long end;
-    protected boolean completed;
-    protected final long id, hostId, guildId;
-    protected final String reward;
-
-    private String mention;
-    private Member host;
-    private Guild guild;
-    private Message message;
-    private ScheduledFuture<?> future;
-    private final GiveawayManager manager;
-
+    private static final String REACTION = "\uD83C\uDF89";
     private static final Logger log = LoggerFactory.getLogger(Giveaway.class);
 
-    public Giveaway(GiveawayManager manager, long id, long hostId, long guildId, String reward, int winners, long end) {
-        this.setName("GiveawayThread-" + id);
+    /* Saved as a JSON key */
+    private final long id;
 
+    /* Saved inside a JSONObject */
+    private int winners;
+    private final long end;
+    private final long channelId;
+    private final long hostId;
+    private final String reward;
+    private final AtomicBoolean completed;
+
+
+    /* Not saved */
+    private final long guildId;
+    private final Member host;
+    private final GuildMessageChannel channel;
+    private Message message;
+    private final GiveawayManager manager;
+    private ScheduledFuture<?> removalFuture;
+    private ScheduledFuture<?> endingFuture;
+
+    private Giveaway(GiveawayManager manager, String reward,
+                       Message message, Member host,
+                       int winners, long end, boolean completed) {
         this.manager = manager;
-        this.id = id;
-        this.hostId = hostId;
-        this.guildId = guildId;
         this.reward = reward;
         this.winners = winners;
         this.end = end;
+        this.message = message;
+        this.id = message.getIdLong();
+        this.channel = message.getGuildChannel();
+        this.channelId = channel.getIdLong();
+        this.guildId = channel.getGuild().getIdLong();
+        this.host = host;
+        this.hostId = host.getIdLong();
+        this.completed = new AtomicBoolean(completed);
 
-        check();
-    }
+        manager.addGiveaway(this);
+        manager.writeGiveaways();
 
-    protected Giveaway(GiveawayManager manager, JSONObject o) {
-        this(manager,
-                o.getLong("id"),
-                o.getLong("host"),
-                o.getLong("guild"),
-                o.getString("reward"),
-                (o.has("winners") ? o.getInt("winners") : 1),
-                o.getLong("end"));
-    }
-
-    protected JSONObject toJSON() {
-        JSONObject o = new JSONObject();
-
-        o.put("id", id);
-        o.put("host", hostId);
-        o.put("guild", guildId);
-        o.put("reward", reward);
-        if (winners != 1) o.put("winners", winners);
-        o.put("end", end);
-
-        return o;
-    }
-
-    @Override
-    public void run() {
-        if (completed) return;
-        init();
-
-        log.info("Starting giveaway with id {}", id);
-
-        try {
-            message.editMessage(mention + "\n\n" + Emotes.TADA + " **GIVEAWAY** " + Emotes.TADA).complete();
-            message.editMessageEmbeds(FormatUtil.runningGiveawayEmbed(winners, end, reward, host).build()).queue();
-        }
-        catch (RuntimeException e) {
-            failed(e);
+        if (end <= OtherUtil.epoch() || completed) {
+            endingFuture = Bot.getScheduledExecutor().schedule(() -> null, 0, TimeUnit.MILLISECONDS);
+            scheduleRemoval();
+            this.completed.set(true);
+            return;
         }
 
-        log.info("Scheduled giveaway with id {} to end at {} (in {} seconds)", id, end, end - OtherUtil.epoch());
-        Bot.getScheduledExecutor().schedule(() -> end(false),
-                end - OtherUtil.epoch(), TimeUnit.SECONDS);
+        log.info("Scheduling giveaway with id {} to end at {}", id, end);
+        endingFuture = Bot.getScheduledExecutor().schedule(() -> end(false), end - OtherUtil.epoch(), TimeUnit.SECONDS);
     }
 
-    public void end(boolean reroll) {
-        if (completed) return;
-        init();
-
+    /* ---- Functional methods ---- */
+    public final void end(boolean reroll) {
+        if (!completed.compareAndSet(false, true) && !reroll) return;
+        endingFuture.cancel(false);
         if (reroll) log.info("Rerolling giveaway with id {}", id);
         else log.info("Ending giveaway with id {}", id);
 
         try {
             message = message.getChannel().retrieveMessageById(id).complete();
+        } catch (RuntimeException e) {
+            return;
         }
-        catch (RuntimeException e) {
-            failed(e);
-        }
 
-        Objects.requireNonNull(message).getReactions().stream().filter((mr) -> mr.getReactionEmote().getEmoji().equals("\uD83C\uDF89")).findAny().ifPresent((mr) ->
-        {
-            List<User> users = new ArrayList<>(mr.retrieveUsers().complete());
-            users.remove(Bot.getJDA().getSelfUser());
+        message.getReactions().stream().filter(reaction -> reaction.getReactionEmote().getEmoji().equals(REACTION))
+                .findAny().ifPresent(reaction ->
+                {
+                    List<User> reactors = new ArrayList<>(reaction.retrieveUsers().complete());
+                    reactors.remove(Bot.getJDA().getSelfUser());
 
-            if (!users.isEmpty()) {
-                List<User> users1 = new ArrayList<>(users);
-                List<User> winnersList = new ArrayList<>();
-                StringBuilder sb = new StringBuilder();
+                    if (!reactors.isEmpty()) {
+                        List<User> users = new ArrayList<>(reactors);
+                        List<User> winners = new ArrayList<>();
+                        StringBuilder sb = new StringBuilder();
 
-                for (int i = 0; winners > i && users.size() > i; i++) {
-                    User user = users1.get((int) (Math.random() * users1.size()));
-                    winnersList.add(user);
-                    users1.remove(user);
-                }
+                        for (int i = 0; this.winners > i && reactors.size() > i; i++) {
+                            User user = users.get((int) (new Random().nextDouble() * users.size()));
+                            winners.add(user);
+                            users.remove(user);
+                        }
 
-                winnersList.forEach((user) -> sb.append(user.getAsMention()).append(" "));
+                        winners.forEach(user -> sb.append(String.format("%s ", user.getAsMention())));
+                        notifySuccessfulEnd(sb.toString(), reroll);
+                    }
+                    else
+                        notifyFailedEnd(reroll);
+                });
 
-                MessageAction temp = message.getChannel()
-                        .sendMessage(Emotes.BELL + sb + "\n" + Emotes.BELL + host.getAsMention())
-                        .setActionRows(FormatUtil.jumpButton(message));
-
-                if (reroll) {
-                    temp.setEmbeds(FormatUtil.rerollGiveawayEmbed(id, sb.toString(), host, reward).build()).queue();
-                }
-                else {
-                    message.editMessage(Emotes.TADA + " **GIVEAWAY ENDED** " + Emotes.TADA)
-                            .setEmbeds(FormatUtil.endedGiveawayEmbed(id, sb.toString(), host, reward).build()).queue();
-
-                    temp.setEmbeds(FormatUtil.endedGiveawayEmbed(id, sb.toString(), host, reward).build()).queue();
-                }
-
-            }
-            else {
-                MessageAction temp = message.getChannel()
-                        .sendMessage(Emotes.BELL + mention + "\n" + Emotes.BELL + host.getAsMention())
-                        .setActionRows(FormatUtil.jumpButton(message));
-
-                if (reroll) {
-                    temp.setEmbeds(FormatUtil.noWinnersGiveawayEmbed(id, reward).build()).queue();
-                }
-                else {
-                    message.editMessage(Emotes.TADA + " **GIVEAWAY ENDED** " + Emotes.TADA)
-                            .setEmbeds(FormatUtil.noWinnersGiveawayEmbed(id, reward).build()).queue();
-
-                    temp.setEmbeds(FormatUtil.noWinnersGiveawayEmbed(id, reward).build()).queue();
-                }
-            }
-        });
-
-        completed = true;
-
-        if (future != null) future.cancel(false);
-
-        log.info("Scheduling to delete giveaway with id {} from cache in 24hrs", id);
-
-        future = Bot.getScheduledExecutor().schedule(() -> {
-            log.info("Deleted giveaway with id {} from cache", id);
-            manager.removeGiveaway(this);
-            manager.writeGiveaways();
-        }, 24, TimeUnit.HOURS);
+        scheduleRemoval();
     }
 
     public void cancel() {
+        if (completed.get()) return;
         log.info("Cancelling giveaway with id {}", id);
 
-        manager.removeGiveaway(this);
+        manager.removeGiveaway(id);
         manager.writeGiveaways();
-        if (future != null) future.cancel(false);
-
-        if (completed) return;
-        init();
-
-        completed = true;
-
-        message.editMessage("_was a giveaway once..._").queue();
-        message.editMessageEmbeds(FormatUtil.defaultEmbed("Giveaway canceled").build()).queue();
-        message.removeReaction("\uD83C\uDF89").queue();
+        if (removalFuture != null) removalFuture.cancel(false);
+        endingFuture.cancel(false);
+        message.delete().queue();
     }
 
     public void reroll() {
@@ -189,64 +131,17 @@ public class Giveaway extends Thread {
     }
 
     public void reroll(int winners) {
-        if (!completed) return;
+        if (!completed.get()) return;
 
-        completed = false;
-
-        if (this.winners != winners) {
+        if (this.winners != winners)
             this.winners = winners;
-        }
 
         end(true);
     }
 
-    private void failed(Throwable t) {
-        log.warn("Giveaway with id {} failed", id, t);
-
-        if (future != null) future.cancel(false);
-        log.info("Deleted giveaway with id {} from cache", id);
-        manager.removeGiveaway(this);
-        manager.writeGiveaways();
-
-        if (completed) return;
-
-        completed = true;
-    }
-
-    private void init() {
-        if (guild == null) guild = Bot.getJDA().getGuildById(guildId);
-
-        if (guild == null) failed(new NullPointerException("guild is null"));
-
-        if (message == null) message = OtherUtil.findMessageById(id, guild);
-        if (host == null) host = guild.getMemberById(hostId);
-
-        if (message == null || host == null) failed(new NullPointerException("message / host is null"));
-
-        Role role = Bot.getGuildConfig(message.getGuild()).getGiveaway(message.getGuild());
-        mention = (role == null ? "@everyone": role.getAsMention());
-    }
-
-    private void check() {
-        if (end < OtherUtil.epoch()) {
-            completed = true;
-
-            future = Bot.getScheduledExecutor().schedule(() -> {
-                log.info("Deleted giveaway with id {} from cache", id);
-                manager.removeGiveaway(this);
-                manager.writeGiveaways();
-            }, 24, TimeUnit.HOURS);
-        }
-        else {
-            completed = false;
-
-            manager.addGiveaway(this);
-            manager.writeGiveaways();
-        }
-    }
-
+    /* ---- Get methods ---- */
     public boolean isCompleted() {
-        return completed;
+        return completed.get();
     }
 
     public long getEnd() {
@@ -261,7 +156,7 @@ public class Giveaway extends Thread {
         return host;
     }
 
-    public long getGiveawayId() {
+    public long getId() {
         return id;
     }
 
@@ -269,7 +164,114 @@ public class Giveaway extends Thread {
         return reward;
     }
 
-    public Guild getGuild() {
-        return guild;
+    public GuildMessageChannel getChannel() {
+        return channel;
+    }
+
+    public long getGuildId() {
+        return guildId;
+    }
+
+    /* ---- Private methods ---- */
+    private void scheduleRemoval() {
+        manager.writeGiveaways();
+        if (removalFuture != null) removalFuture.cancel(false);
+
+        log.info("Scheduling giveaway with id {} for deletion in 48 hours", id);
+        removalFuture = Bot.getScheduledExecutor().schedule(() -> {
+            log.info("Deleting giveaway with id {} from cache", id);
+            manager.removeGiveaway(id);
+            manager.writeGiveaways();
+        }, 48, TimeUnit.HOURS);
+    }
+
+    private void notifySuccessfulEnd(String winners, boolean reroll) {
+        Role role = Bot.getGuildConfig(message.getGuild()).getGiveaway(message.getGuild());
+        String mention = role == null ? "@everyone" : role.getAsMention();
+        MessageEmbed embed = FormatUtil.endedGiveawayEmbed(id, winners, host, reward).build();
+
+        if (!reroll)
+            message.editMessage(Emotes.TADA + " **GIVEAWAY ENDED** " + Emotes.TADA).setEmbeds(embed).queue();
+
+        message.getChannel()
+                .sendMessage(String.format("%s %s\n%s %s", Emotes.BELL, mention, Emotes.BELL, host.getAsMention()))
+                .setActionRows(FormatUtil.jumpButton(message)).setEmbeds(embed).queue();
+    }
+
+    private void notifyFailedEnd(boolean reroll) {
+        Role role = Bot.getGuildConfig(message.getGuild()).getGiveaway(message.getGuild());
+        String mention = role == null ? "@everyone" : role.getAsMention();
+        MessageEmbed embed = FormatUtil.noWinnersGiveawayEmbed(id, reward).build();
+
+        if (!reroll)
+            message.editMessage(Emotes.TADA + " **GIVEAWAY ENDED** " + Emotes.TADA).setEmbeds(embed).queue();
+
+        message.getChannel()
+                .sendMessage(Emotes.BELL + mention + "\n" + Emotes.BELL + host.getAsMention())
+                .setActionRows(FormatUtil.jumpButton(message)).setEmbeds(embed).queue();
+    }
+
+
+    /* ---- Static methods ---- */
+    public static Giveaway build(GiveawayManager manager, GuildMessageChannel channel,
+                                 String reward, Member host, int winners, long end) {
+        log.info("Building new giveaway (channel {}, guild {}, host {})", channel.getIdLong(), channel.getGuild().getIdLong(), host.getIdLong());
+
+        return new Giveaway(manager, reward, sendStartMessage(channel, reward, host, winners, end), host, winners, end, end <= OtherUtil.epoch());
+    }
+
+    public static Giveaway ofJSON(GiveawayManager manager, long id, JSONObject object) {
+        log.info("Loading giveaway from JSON ({})", object.toString());
+
+        String reward = object.getString("reward");
+        int winners  = object.optInt("winners", 1);
+        long channelId = object.getLong("channel");
+        long hostId = object.getLong("host");
+        long end = object.getLong("end");
+        boolean completed = object.getBoolean("completed");
+
+        JDA jda = Bot.getJDA();
+        GuildMessageChannel channel = (GuildMessageChannel) jda.getGuildChannelById(channelId);
+        Objects.requireNonNull(channel, "Giveaway channel not found");
+
+        Member host = channel.getGuild().retrieveMemberById(hostId).complete();
+        Objects.requireNonNull(host, "Host not found");
+
+        Message message;
+        try {
+            message = channel.retrieveMessageById(id).complete();
+        }
+        catch (RuntimeException e) {
+            throw new NullPointerException("Message not found");
+        }
+
+        return new Giveaway(manager, reward, message, host, winners, end, completed);
+    }
+
+    public static JSONObject toJSON(Giveaway giveaway) {
+        JSONObject object = new JSONObject();
+
+        object.put("reward", giveaway.reward);
+        object.put("end", giveaway.end);
+        object.put("host", giveaway.hostId);
+        object.put("channel", giveaway.channelId);
+        if (giveaway.winners != 1) object.put("winners", giveaway.winners);
+        object.put("completed", giveaway.completed.get());
+
+        return object;
+    }
+
+    private static Message sendStartMessage(GuildMessageChannel channel, String reward,
+                                            Member host, int winners, long end) {
+        Role r = Bot.getGuildConfig(channel.getGuild()).getGiveaway(channel.getGuild());
+        String role = r == null ? "@everyone" : r.getAsMention();
+        MessageBuilder builder = new MessageBuilder();
+
+        builder.append(String.format("%s\n\n%s **GIVEAWAY** %s", role, Emotes.TADA, Emotes.TADA));
+        builder.setEmbeds(FormatUtil.runningGiveawayEmbed(winners, end, reward, host).build());
+
+        Message message = channel.sendMessage(builder.build()).complete();
+        message.addReaction(REACTION).queue();
+        return message;
     }
 }
