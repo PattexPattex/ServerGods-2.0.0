@@ -1,8 +1,8 @@
 package com.pattexpattex.servergods2.commands.slash.fun;
 
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.giveaway.Giveaway;
 import com.pattexpattex.servergods2.core.giveaway.GiveawayManager;
 import com.pattexpattex.servergods2.util.Emotes;
@@ -10,8 +10,8 @@ import com.pattexpattex.servergods2.util.FormatUtil;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.GuildMessageChannel;
+import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
@@ -34,7 +34,7 @@ public class GiveawayCmd extends BotSlash {
 
         switch (subcommand) {
             case "giveaway/new" -> {
-                User host = event.getOption("host") != null ? Objects.requireNonNull(event.getOption("host")).getAsUser() : event.getUser();
+                Member host = event.getOption("host") != null ? Objects.requireNonNull(event.getOption("host")).getAsMember() : event.getMember();
                 int winners = event.getOption("winners") != null ? (int) Objects.requireNonNull(event.getOption("winners")).getAsLong() : 1;
                 String reward = Objects.requireNonNull(event.getOption("reward")).getAsString();
                 String timeRaw = Objects.requireNonNull(event.getOption("time")).getAsString();
@@ -49,21 +49,8 @@ public class GiveawayCmd extends BotSlash {
 
                 long end = Instant.now().getEpochSecond() + time;
 
-                Role role = Bot.getGuildConfig(guild).getGiveaway(guild);
-                String mention = (role != null ? role.getAsMention() : "@everyone");
-
-                event.getChannel().sendMessage(Emotes.HOURGLASS + " `Setting up a new giveaway...`\n\n" + mention).queue((msg) ->
-                {
-                    msg.addReaction("\uD83C\uDF89").queue();
-                    try {
-                        new Giveaway(Bot.getGiveawayManager(), msg.getIdLong(), host.getIdLong(), Objects.requireNonNull(guild).getIdLong(), reward, winners, end).start();
-                    }
-                    catch (RuntimeException e) {
-                        throw new BotException(e);
-                    }
-                });
-
                 event.getHook().editOriginalEmbeds(FormatUtil.defaultEmbed(Emotes.YES + " Started a giveaway").build()).queue();
+                Giveaway.build(manager, (GuildMessageChannel) event.getGuildChannel(), reward, host, winners, end);
             }
             case "giveaway/reroll" -> {
                 long giveawayId = Objects.requireNonNull(event.getOption("message-id")).getAsLong();
@@ -137,7 +124,7 @@ public class GiveawayCmd extends BotSlash {
                                 giveaway.getWinners(),
                                 giveaway.getHost().getAsMention(),
                                 (giveaway.isCompleted() ? "ended on " : "ends on ") + FormatUtil.epochTimestamp(giveaway.getEnd()),
-                                giveaway.getGiveawayId()
+                                giveaway.getId()
                         ));
                     }
 
@@ -157,7 +144,7 @@ public class GiveawayCmd extends BotSlash {
                             giveaway.getWinners(),
                             giveaway.getHost().getAsMention(),
                             (giveaway.isCompleted() ? "ended on " : "ends on ") + FormatUtil.epochTimestamp(giveaway.getEnd()),
-                            giveaway.getGiveawayId()
+                            giveaway.getId()
                     ));
 
                     event.getHook().editOriginalEmbeds(builder.build()).queue();

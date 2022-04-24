@@ -1,9 +1,10 @@
 package com.pattexpattex.servergods2.core.commands;
 
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.config.Config;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.listeners.SlashEventListener;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -36,12 +37,12 @@ public abstract class BotSlash {
      * @since 2.1.0
      * */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public final void setup(@NotNull BotSlash cmd) {
+    public final void setup(@NotNull BotSlash cmd, JDA jda) {
 
         if (!cmd.isEnabledGlobal()) {
 
             // Sets up a command in all guilds
-            Bot.getJDA().getGuilds().forEach((guild) -> {
+            jda.getGuilds().forEach((guild) -> {
 
                 // Adds a command to a guild
                 if (isEnabledInGuild(guild)) {
@@ -75,7 +76,7 @@ public abstract class BotSlash {
         }
         // This should never happen, but if it does, oops
         else {
-            Bot.getJDA().upsertCommand(cmd.getName(), cmd.getDesc())
+            jda.upsertCommand(cmd.getName(), cmd.getDesc())
                         .addOptions(getOptions())
                         .complete();
         }

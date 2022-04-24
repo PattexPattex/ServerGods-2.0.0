@@ -87,7 +87,7 @@ public class MiscEventListener extends ListenerAdapter {
             }
         }
 
-        SlashEventListener.getEnabledCommands().forEach((cmd) -> cmd.setup(cmd));
+        SlashEventListener.getEnabledCommands().forEach((cmd) -> cmd.setup(cmd, event.getJDA()));
     }
 
     @Override
@@ -233,7 +233,6 @@ public class MiscEventListener extends ListenerAdapter {
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        Bot.getGiveawayManager().resumeActiveGiveaways();
         Bot.getMuteManager().resumeActiveMutes();
 
         if (event.getGuildTotalCount() == 0) {

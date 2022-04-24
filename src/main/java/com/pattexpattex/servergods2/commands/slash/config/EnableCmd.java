@@ -1,8 +1,8 @@
 package com.pattexpattex.servergods2.commands.slash.config;
 
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.listeners.SlashEventListener;
 import com.pattexpattex.servergods2.util.Emotes;
 import com.pattexpattex.servergods2.util.FormatUtil;
@@ -68,7 +68,7 @@ public class EnableCmd extends BotSlash {
          * This actually adds / removes a command */
         for (BotSlash cmd : cmdList) {
             if (cmd.getName().equals(cmdOption)) {
-                cmd.setup(cmd);
+                cmd.setup(cmd, event.getJDA());
                 break;
             }
         }
