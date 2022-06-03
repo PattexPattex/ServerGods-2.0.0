@@ -1,8 +1,8 @@
 package com.pattexpattex.servergods2.commands.slash.moderation;
 
 import com.pattexpattex.servergods2.core.Bot;
-import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.commands.BotSlash;
+import com.pattexpattex.servergods2.core.exceptions.BotException;
 import com.pattexpattex.servergods2.core.mute.Mute;
 import com.pattexpattex.servergods2.core.mute.MuteManager;
 import com.pattexpattex.servergods2.util.Emotes;
@@ -25,6 +25,9 @@ import java.util.Objects;
 public class MuteCmd extends BotSlash {
 
     public void run(@NotNull SlashCommandEvent event) {
+
+        if (!event.getMember().hasPermission(Permission.MANAGE_SERVER))
+            throw new BotException("You have insufficient permissions");
 
         Guild guild = Objects.requireNonNull(event.getGuild());
         String commandPath = event.getCommandPath();

@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.pattexpattex'
-version '2.1.1'
+version '2.1.2'
 
 repositories {
     mavenCentral()
@@ -26,7 +26,7 @@ dependencies {
     //implementation "com.sedmelluq:jda-nas:1.1.0" //JDA-NAS
     //implementation "com.sedmelluq:lavaplayer:1.3.77" //LavaPlayer
     implementation 'com.github.idpromnut:lavaplayer:youtube_details_parse_bug-SNAPSHOT'
-    implementation 'se.michaelthelin.spotify:spotify-web-api-java:7.0.1' //Spotify web API wrapper
+    implementation 'se.michaelthelin.spotify:spotify-web-api-java:7.1.0' //Spotify web API wrapper
     implementation "com.jagrosh:JLyrics:0.5" //JLyrics
     implementation "com.typesafe:config:1.4.2" //Typesafe config (dependency of JLyrics)
 

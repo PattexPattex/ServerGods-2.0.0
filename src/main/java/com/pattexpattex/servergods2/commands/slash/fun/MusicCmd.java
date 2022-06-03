@@ -294,6 +294,7 @@ public class MusicCmd extends BotSlash {
                 event.deferReply(true).queue();
 
                 kvintakord.getPlayerManager().loadItemOrdered(guild, "ytsearch: " + query, new AudioLoadResultHandler() {
+
                     @Override
                     public void trackLoaded(AudioTrack track) {
                         EmbedBuilder embed = FormatUtil.kvintakordEmbed(FormatUtil.formatTrackLink(track), "Search result for: `" + query + "`");
